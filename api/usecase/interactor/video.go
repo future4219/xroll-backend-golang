@@ -76,7 +76,6 @@ func (u *VideoUseCase) FindByID(id string) (entity.Video, error) {
 }
 
 func (u *VideoUseCase) FindByIDs(ids []string) ([]entity.Video, error) {
-	fmt.Printf("FindByIDs: ids: %+v\n", ids)
 	videos, err := u.videoRepo.FindByIDs(ids)
 	if err != nil {
 		return nil, err
@@ -91,7 +90,6 @@ func (u *VideoUseCase) Like(videoID string) error {
 	}
 
 	video.LikeCount++
-	fmt.Printf("Like: videoID: %s, LikeCount: %d\n", video.ID, video.LikeCount)
 	if err := u.videoRepo.Update(video); err != nil {
 		return err
 	}

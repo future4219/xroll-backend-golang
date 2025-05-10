@@ -25,8 +25,6 @@ func NewVideoHandler(VideoUC input_port.IVideoUseCase) *VideoHandler {
 func (h *VideoHandler) Search(c echo.Context) error {
 	logger, _ := log.NewLogger()
 
-	//クエリパラメータを取得
-
 	req := &schema.VideoSearchQueryReq{}
 	if err := echo.QueryParamsBinder(c).
 		Int("limit", &req.Limit).
@@ -35,7 +33,7 @@ func (h *VideoHandler) Search(c echo.Context) error {
 		logger.Error("Failed to bind query", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	fmt.Printf("🐛 Search called with limit: %d, offset: %d\n", req.Limit, req.Offset) // ← これ表示されるか？
+
 	res, err := h.VideoUC.Search(
 		input_port.VideoSearch{
 			Limit:  req.Limit,
@@ -107,7 +105,7 @@ func (h *VideoHandler) FindByIDs(c echo.Context) error {
 	
 	idsParam := c.QueryParam("ids")
 	idList := strings.Split(idsParam, ",")
-	fmt.Printf("🐛 FindByIDs called with ids: %s\n", idsParam) // ← これ表示されるか？
+
 	if len(idList) == 0 {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "no ids provided"})
 	}
