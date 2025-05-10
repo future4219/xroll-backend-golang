@@ -1,0 +1,313 @@
+index:
+  get:
+    tags:
+      - "Archive"
+    summary: "アーカイブ一覧取得"
+    description: |
+     - 管理者権限は全件取得が可能。
+     - 管理者権限以外の場合は、掲載期間内のアーカイブのみ取得します。
+    parameters:
+      - name: q
+        in: query
+        required: false
+        description: "文字列あいまい検索(タイトルの文字列に部分一致するものを検索)"
+        schema:
+          type: string
+      - name: skip
+        in: query
+        required: false
+        description: "スキップ数"
+        schema:
+          type: integer
+          example: 0
+      - name: limit
+        in: query
+        required: false
+        description: "取得件数"
+        schema:
+          type: integer
+          example: 10
+      - name: tag-ids
+        in: query
+        required: false
+        description: "タグID (複数指定の場合はカンマ区切り)"
+        schema:
+          type: string
+          example: "tagId1,tagId2"
+      - name: "archive-category-ids"
+        in: query
+        required: false
+        description: "アーカイブカテゴリID (複数指定の場合はカンマ区切り)"
+        schema:
+          type: string
+          example: "archiveCategoryId1,archiveCategoryId2"
+      - name: start-at-from
+        in: query
+        required: false
+        description: "掲載開始日時 (管理者のみ指定可能)"
+        schema:
+          type: string
+          format: date-time
+          example: "2023-08-22T05:01:00Z"
+      - name: end-at-to
+        in: query
+        required: false
+        description: "掲載開始日時 (管理者のみ指定可能)"
+        schema:
+          type: string
+          format: date-time
+          example: "2099-12-31T14:59:00Z"
+      - name: order
+        in: query
+        required: false
+        description: "順序"
+        schema:
+          type: string
+          example: "desc"
+      - name: order-by
+        in: query
+        required: false
+        description: "ソートする要素"
+        schema:
+          type: string
+          example: "title"
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Archive'
+      '400':
+        description: "失敗（無効なリクエスト）"
+      '401':
+        description: "失敗 (認証エラー)"
+      '500':
+        description: "失敗（サーバーエラー）"
+  post:
+    tags:
+      - "Archive"
+    summary: "アーカイブ登録"
+    description: アーカイブを新規登録します
+    requestBody:
+      $ref: '#/components/requestBodies/Archive'
+    responses:
+      '201':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Archive'
+      '400':
+        description: "失敗（無効なリクエスト）"
+      '401':
+        description: "失敗 (認証エラー)"
+      '403':
+        description: "失敗 (権限なし)"
+      '404':
+        description: "失敗 (tag | archiveCategory が見つからない)"
+      '500':
+        description: "失敗（サーバーエラー）"
+
+archiveId:
+  get:
+    tags:
+      - "Archive"
+    summary: "アーカイブ取得"
+    description: "アーカイブを取得します。"
+    parameters:
+      - name: archiveId
+        in: path
+        required: true
+        description: "アーカイブID"
+        schema:
+          type: string
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Archive'
+      '400':
+        description: "失敗（無効なリクエスト）"
+      '403':
+        description: "失敗 (権限なし)"
+      '404':
+        description: "失敗 (archiveが見つからない)"
+      '500':
+        description: "失敗（サーバーエラー）"
+  put:
+    tags:
+      - "Archive"
+    summary: "アーカイブ詳細更新"
+    description: "アーカイブ詳細を更新します。"
+    parameters:
+      - name: archiveId
+        in: path
+        required: true
+        description: "アーカイブID"
+        schema:
+          type: string
+    requestBody:
+      $ref: '#/components/requestBodies/Archive'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Archive'
+  delete:
+    tags:
+      - "Archive"
+    summary: "アーカイブ削除"
+    description: "指定されたIDのアーカイブ情報を削除します。管理者のみ実行可能"
+    parameters:
+      - name: archiveId
+        in: path
+        required: true
+        description: "アーカイブID"
+        schema:
+          type: string
+    responses:
+      '204':
+        description: "成功（コンテンツなし）"
+      '404':
+        description: "失敗（パッケージが見つからない）"
+      '400':
+        description: "失敗（無効なリクエスト）"
+
+components:
+  requestBodies:
+    Archive:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - startAt
+              - endAt
+              - title
+              - messageJson
+              - categoryIds
+              - source
+              - thumbnail
+            properties:
+              startAt:
+                type: string
+                format: date-time
+                example: "2023-08-22T05:01:00Z"
+                description: "開始日時"
+              endAt:
+                type: string
+                format: date-time
+                example: "2099-12-31T14:59:00Z"
+                description: "終了日時"
+              title:
+                type: string
+                example: "てすとてすとてすと"
+                description: "タイトル"
+              messageJson:
+                type: string
+                example: "<p>テストのアーカイブ</p>"
+                description: "概要"
+              files:
+                type: array
+                items:
+                  type: object
+                  $ref: "./file.yml#/components/schemas/CreateFile"
+              categoryIds:
+                type: array
+                items:
+                  type: string
+                  description: "カテゴリーID"
+                  example: "01HF32BG1RPNX6PXQ5RBMKHXNA"
+              source:
+                type: string
+                example: "テキスト"
+                description: "情報提供元"
+              thumbnail:
+                type: object
+                $ref: "./file.yml#/components/schemas/CreateFile"
+              movie:
+                type: object
+                $ref: "./file.yml#/components/schemas/CreateFile"
+              documentFiles:
+                type: array
+                items:
+                  type: object
+                  $ref: "./file.yml#/components/schemas/CreateFile"
+              tags:
+                $ref: './tag.yml#/components/schemas/CreateTag'
+
+  schemas:
+    Category:
+      $ref: './archiveCategory.yml#/components/schemas/Category'
+    # Tag:
+
+    Archive:
+      type: object
+      properties:
+        archiveId:
+          type: string
+          example: "01HF31FBA7TE8PDT8BYAD9BWFW"
+          description: "アーカイブID"
+        startAt:
+          type: string
+          format: date-time
+          example: "2023-08-22T05:01:00Z"
+          description: "開始日時"
+        endAt:
+          type: string
+          format: date-time
+          example: "2099-12-31T14:59:00Z"
+          description: "終了日時"
+        title:
+          type: string
+          example: "てすとてすとてすと"
+          description: "タイトル"
+        description:
+          type: string
+          example: "<p>テストのアーカイブ</p>"
+          description: "概要"
+        archiveCategories:
+          type: array
+          items:
+            $ref: './archiveCategory.yml#/components/schemas/ArchiveCategory'
+        source:
+          type: string
+          example: ""
+          description: "情報提供元"
+        thumbnailUrl:
+          type: string
+          example: "http://schemas.google.com/"
+          description: "サムネイルURL"
+        movieUrl:
+          type: string
+          example: "http://schemas.google.com/"
+          description: "動画URL"
+        documentFiles:
+          type: array
+          items:
+            type: object
+            description: "添付ファイル"
+            properties:
+              name:
+                type: string
+                example: "ファイル名"
+                description: "ファイル名"
+              url:
+                type: string
+                example: "http://schemas.google.com/"
+                description: "ファイルURL"
+        tags:
+          type: array
+          items:
+            $ref: './tag.yml#/components/schemas/Tag'

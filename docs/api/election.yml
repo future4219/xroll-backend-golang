@@ -1,0 +1,492 @@
+index:
+  get:
+    tags:
+      - "Election"
+    summary: "選挙一覧検索"
+    description: |
+      管理者権限以外の場合は、計算期間内の選挙のみ取得します。
+    parameters:
+      - name: q
+        in: query
+        required: false
+        description: "選挙名または概要部分一致"
+        schema:
+          type: string
+      - name: start-at-from
+        in: query
+        required: false
+        description: "掲載開始日時"
+        schema:
+          type: string
+          format: date-time
+      - name: end-at-to
+        in: query
+        required: false
+        description: "掲載開始日時"
+        schema:
+          type: string
+          format: date-time
+      - name: statuses
+        in: query
+        required: false
+        description: "ステータス"
+        schema:
+          type: array
+          items:
+            type: string
+      - name: visibilities
+        in: query
+        required: false
+        description: "公開範囲"
+        schema:
+          type: array
+          items:
+            type: string
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Election'
+      '400':
+        description: "失敗（無効なリクエスト）"
+      '500':
+        description: "失敗（サーバーエラー）"
+  post:
+    tags:
+      - "Election"
+    summary: "選挙情報登録"
+    description: 選挙情報を新規登録します
+    requestBody:
+      $ref: '#/components/requestBodies/Election'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Election'
+
+electionId:
+  get:
+    tags:
+      - "Election"
+    summary: "選挙詳細取得"
+    description: "選挙詳細を取得します。"
+    parameters:
+      - name: electionId
+        in: path
+        required: true
+        description: "選挙ID"
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Election'
+  put:
+    tags:
+      - "Election"
+    summary: "選挙詳細更新"
+    description: "選挙詳細を更新します。"
+    parameters:
+      - name: electionId
+        in: path
+        required: true
+        description: "選挙ID"
+        schema:
+          type: integer
+    requestBody:
+      $ref: '#/components/requestBodies/Election'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Election'
+  delete:
+    tags:
+      - "Election"
+    summary: "選挙削除"
+    description: "指定されたIDの選挙情報を削除します。管理者のみ実行可能"
+    parameters:
+      - name: electionId
+        in: path
+        required: true
+        description: "選挙ID"
+        schema:
+          type: integer
+    responses:
+      '204':
+        description: "成功（コンテンツなし）"
+      '401':
+        description: "失敗（認証エラー）"
+      '403':
+        description: "失敗（権限なし）"
+      '404':
+        description: "失敗（パッケージが見つからない）"
+      '400':
+        description: "失敗（無効なリクエスト）"
+
+electionAnswer:
+  post:
+    tags:
+      - "Election"
+    summary: "選挙の投票を行う。"
+    description: |
+      - 選挙の回答送信
+      - Questionのtypeがtextの場合、choiceIdsは不要, textは必須
+      - Questionのtypeがtext以外の場合、choiceIdsは必須, textは不要
+      - 非会員はこれを実行することができない
+      - 投票者は、一度投票していた場合は再投票をすることができない
+    parameters:
+      - name: electionId
+        in: path
+        required: true
+        description: "選挙ID"
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - answer
+            properties:
+              answers:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - electionQuestionId
+                  properties:
+                    electionQuestionId:
+                      type: string
+                      example: 01HF744ZH39EA9RJ1TJY3KNSD9
+                      description: "質問ID"
+                    choiceIds:
+                      nullable: true
+                      type: array
+                      example: ["01HF744ZH39EA9RJ1TJY3KNSSW", "01HF744ZH39EA9RJ1TJY3KNSSW", "01HF744ZH39EA9RJ1TJY3KNSSW"]
+                      description: "選択肢ID"
+                    text:
+                      nullable: true
+                      type: string
+                      example: "テキスト"
+                      description: "テキスト"
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ElectionAnswer'
+      '403':
+        description: "失敗 (StatusがOpen以外 | 期間外 | 権限のない所属技士会、会員で回答)"
+      '404':
+        description: "失敗 (Election | ElectionQuestion | Choice が見つからない)"
+      '409':
+        description: "失敗 (回答済みに回答)"
+
+
+electionAnswerUser:
+  get:
+    tags:
+      - "Election"
+    summary: "選挙のユーザーごとの回答を取得"
+    description: "選挙のユーザーごとの回答を取得"
+    parameters:
+      - name: electionId
+        in: path
+        required: true
+        description: "選挙ID"
+        schema:
+          type: integer
+      - name: memberId
+        in: path
+        required: false
+        description: "会員ID"
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ElectionAnswer'
+
+electionAnswerSummary:
+  get:
+    tags:
+      - "Election"
+    summary: "選挙結果のサマリーを返す"
+    description: "回答結果を集計し、集計結果を返します。管理者のみ実行可能"
+    parameters:
+      - name: electionId
+        in: path
+        required: true
+        description: "選挙ID"
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ElectionAnswerSummary'
+
+components:
+  requestBodies:
+    Election:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - type
+              - title
+              - visibility
+              - visibilityPrefectures
+              - startAt
+              - endAt
+              - description
+            properties:
+              type:
+                type: string
+                example: "election"
+                description: "選挙種別"
+                enum:
+                  - "nominationForm"
+                  - "votingForm"
+              title:
+                type: string
+                example: "てすとてすとてすと"
+                description: "選挙名"
+              visibility:
+                type: string
+                example: "public"
+                description: "公開範囲"
+                enum:
+                  - "everyone"
+                  - "membersOnly"
+                  - "delegatesOnly"
+              visibilityPrefectures:
+                type: array
+                items:
+                  type: string
+                example: ["1", "2"]
+                description: "公開範囲（所属都道府県技士会）"
+              startAt:
+                type: string
+                format: date-time
+                example: "2023-08-22T05:01:00Z"
+                description: "開始日時"
+              endAt:
+                type: string
+                format: date-time
+                example: "2099-12-31T14:59:00Z"
+                description: "終了日時"
+              description:
+                type: string
+                example: "<p>テストの選挙</p>"
+                description: "概要"
+              questions:
+                type: object
+                additionalProperties: true
+                description: "選挙内容のJSON"
+  schemas:
+    Prefecture:
+      $ref: './prefecture.yml#/components/schemas/Prefecture'
+    Election:
+      type: object
+      properties:
+        electionId:
+          type: string
+          example: 01HF744ZH39EA9RJ1TJY3KNSD9
+          description: "選挙ID(ULID)"
+        type:
+          type: string
+          example: "nominationForm"
+          description: "選挙種別"
+          enum:
+            - "nominationForm"
+            - "votingForm"
+        title:
+          type: string
+          example: "てすとてすとてすと"
+          description: "選挙名"
+        status:
+          type: string
+          example: "draft"
+          description: "ステータス"
+          enum:
+            - "draft"
+            - "open"
+            - "close"
+        visibility:
+          type: string
+          example: "public"
+          description: "公開範囲"
+          enum:
+            - "everyone"
+            - "membersOnly"
+            - "delegatesOnly"
+        visibilityPrefectures:
+          type: array
+          items:
+            $ref: '#/components/schemas/Prefecture'
+          description: "公開範囲（所属都道府県技士会）"
+        startAt:
+          type: string
+          format: date-time
+          example: "2023-08-22T05:01:00Z"
+          description: "開始日時"
+        endAt:
+          type: string
+          format: date-time
+          example: "2099-12-31T14:59:00Z"
+          description: "終了日時"
+        files:
+          type: array
+          items:
+            type: object
+            $ref: './file.yml#/components/schemas/File'
+          description: "添付ファイル"
+        messageJson:
+          type: string
+          example: "<p>テストの選挙</p>"
+          description: "概要のJSON"
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElectionQuestion'
+          description: "質問"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2023-08-22T05:01:00Z"
+          description: "更新日時"
+    ElectionQuestion:
+      type: object
+      properties:
+        electionQuestionId:
+          type: integer
+          example: 1
+          description: "質問ID"
+        mainDescription:
+          type: string
+          example: "質問"
+          description: "質問内容"
+        type:
+          type: string
+          example: "radio"
+          description: "質問タイプ"
+          enum:
+            - "radio"
+            - "checkbox"
+            - "text"
+            - "pulldown"
+        subDescription:
+          type: string
+          example: "説明"
+          description: "説明"
+        sortNumber:
+          type: integer
+          example: 1
+          description: "並び順"
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElectionQuestionChoice'
+          description: "選択肢"
+    ElectionQuestionChoice:
+      type: object
+      properties:
+        choiceId:
+          type: integer
+          example: 1
+          description: "選択肢ID"
+        value:
+          type: string
+          example: "1"
+          description: "選択肢の値"
+        sortNumber:
+          type: integer
+          example: 1
+          description: "並び順"
+    ElectionAnswer:
+      type: object
+      properties:
+        electionAnswerId:
+          type: integer
+          example: 1
+          description: "回答ID"
+        questions:
+          type: array
+          items:
+            type: object
+            properties:
+              questionId:
+                $ref: '#/components/schemas/ElectionQuestion/properties/electionQuestionId'
+              mainDescription:
+                $ref: '#/components/schemas/ElectionQuestion/properties/mainDescription'
+              type:
+                $ref: '#/components/schemas/ElectionQuestion/properties/type'
+              sortNumber:
+                $ref: '#/components/schemas/ElectionQuestion/properties/sortNumber'
+              choices:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ElectionQuestionChoice'
+              answer:
+                type: object
+                properties:
+                  choiceIds:
+                    nullable: true
+                    type: array
+                    example: [1, 2, 3]
+                    description: "選択肢ID"
+                  text:
+                    nullable: true
+                    type: string
+                    example: "テキスト"
+                    description: "テキスト"
+        userId:
+          type: integer
+          example: 1
+          description: "会員ID"
+    ElectionAnswerSummary:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 1
+          description: "回答数"
+        percent:
+          type: integer
+          example: 100
+          description: "回答率"
+        question:
+          type: string
+          description: "選挙内容の質問"
+          example: "回答内容"

@@ -1,0 +1,33 @@
+index:
+  get:
+    tags:
+      - "Master"
+      - "Member"
+    summary: "都道府県一覧取得"
+    description: "都道府県一覧を取得します。"
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Occupation'
+
+components:
+  schemas:
+    Prefecture:
+      type: object
+      properties:
+        prefectureId:
+          type: integer
+          example: 10
+          description: "ID"
+        name:
+          type: string
+          example: "兵庫県"
+          description: "都道府県名"

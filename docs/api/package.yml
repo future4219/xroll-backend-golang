@@ -1,0 +1,1196 @@
+index:
+  get:
+    tags:
+      - "Package"
+    summary: "パッケージ一覧取得"
+    description: |
+      パッケージの一覧を取得します。
+      管理者権限のユーザー以外からのアクセスの場合は、記載期間内のパッケージのみ取得できます。
+    parameters:
+      - name: title
+        in: query
+        required: false
+        description: "タイトル"
+        schema:
+          type: string
+      - name: category-ids
+        in: query
+        required: false
+        description: "カテゴリID"
+        schema:
+          type: array
+          items:
+            type: string
+      - name: difficulties
+        in: query
+        required: false
+        description: "難易度"
+        schema:
+          type: array
+          items:
+            type: string
+      - name: course-categories
+        in: query
+        required: false
+        description: "コースカテゴリ"
+        schema:
+          type: array
+          items:
+            type: string
+      - name: start-at-from
+        in: query
+        required: false
+        description: "掲載開始日時"
+        schema:
+          type: string
+          format: date-time
+      - name: end-at-to
+        in: query
+        required: false
+        description: "掲載開始日時"
+        schema:
+          type: string
+          format: date-time
+      - name: statuses
+        in: query
+        required: false
+        description: "ステータス 管理者のみ利用可"
+        schema:
+          type: array
+          items:
+            type: string
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                list:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ListPackage'
+                total:
+                  type: integer
+                  example: 1
+                  description: "総件数"
+  post:
+    tags:
+      - "Package"
+    summary: "パッケージ新規登録"
+    description: パッケージを新規登録します
+    requestBody:
+      $ref: '#/components/requestBodies/Package'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+            $ref: '#/components/schemas/Package'
+packageId:
+  get:
+    tags:
+      - "Package"
+    summary: "パッケージ詳細"
+    description: "パッケージ情報を一件取得します。"
+    parameters:
+      - name: packageId
+        in: path
+        required: true
+        description: "パッケージID"
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Package'
+  put:
+    tags:
+      - "Package"
+    summary: "パッケージ更新"
+    description: "パッケージ情報を更新します。"
+    parameters:
+      - name: packageId
+        in: path
+        required: true
+        description: "パッケージID"
+        schema:
+          type: integer
+    requestBody:
+      $ref: '#/components/requestBodies/Package'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Package'
+  delete:
+    tags:
+      - "Package"
+    summary: "パッケージ削除"
+    description: "指定されたIDのパッケージ情報を削除します。管理者のみ実行可能"
+    parameters:
+      - name: packageId
+        in: path
+        required: true
+        description: "パッケージID"
+        schema:
+          type: integer
+    responses:
+      '204':
+        description: "成功（コンテンツなし）"
+      '404':
+        description: "失敗（パッケージが見つからない）"
+      '400':
+        description: "失敗（無効なリクエスト）"
+
+packageContentQuestionnaireAnswer:
+  post:
+    tags:
+      - "Package"
+    summary: "パッケージのアンケートの回答を登録します。"
+    description: |
+      - アンケート結果の送信
+      - Questionのtypeがtextの場合、choiceIdsは空配列, textは必須
+      - Questionのtypeがtext以外の場合、choiceIdsは必須, textは空文字
+    parameters:
+      - name: package-content-id
+        in: path
+        required: true
+        description: "パッケージのコンテンツID"
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - packageQuestionnaireAnswerQuestions
+            properties:
+              packageQuestionnaireAnswerQuestions:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - packageQuestionnaireContentQuestionId
+                    - packageQuestionnaireChoiceIds
+                  properties:
+                    packageQuestionnaireContentQuestionId:
+                      type: string
+                      example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+                      description: "回答したQuestionID"
+                    packageQuestionnaireChoiceIds:
+                      type: array
+                      items:
+                        type: string
+                        example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+                        description: "選択したChoiceID"
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PackageQuestionnaireAnswer'
+      '400':
+        description: "失敗（無効なリクエスト）"
+      '404':
+        description: "失敗（回答が見つからない）"
+      '409':
+        description: "失敗（回答済み）"
+      '500':
+        description: "失敗（サーバーエラー）"
+  get:
+    tags:
+      - "Package"
+    summary: "コンテンツ回答取得"
+    description: "コンテンツの回答を取得します。"
+    parameters:
+      - name: memberId
+        in: query
+        required: true
+        description: "会員ID"
+        schema:
+          type: integer
+      - name: packageContentId
+        in: path
+        required: true
+        description: "コンテンツID"
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PackageQuestionnaireAnswer'
+packageContentExamAnswer:
+  put:
+    tags:
+      - "Package"
+    summary: "パッケージの試験の回答を登録します。"
+    description: |
+      - 試験結果の送信
+      - 初回はCreate,それ以降はUpdateする
+    parameters:
+      - name: package-content-id
+        in: path
+        required: true
+        description: "パッケージのコンテンツID"
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - packageExamContentAnswerQuestions
+            properties:
+              packageExamContentAnswerQuestions:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - packageExamContentQuestionId
+                    - packageExamContentChoiceIds
+                  properties:
+                    packageExamContentQuestionId:
+                      type: string
+                      example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+                      description: "回答したQuestionID"
+                    packageExamContentChoiceIds:
+                      type: array
+                      items:
+                        type: string
+                        example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+                        description: "選択したChoiceID"
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PackageExamAnswer'
+      '400':
+        description: "失敗（無効なリクエスト）"
+      '404':
+        description: "失敗（回答が見つからない）"
+      '500':
+        description: "失敗（サーバーエラー）"
+  get:
+    tags:
+      - "Package"
+    summary: "試験の回答取得"
+    description: "試験の回答を取得します。"
+    parameters:
+      - name: package-content-id
+        in: path
+        required: true
+        description: "コンテンツID"
+        schema:
+          type: string
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PackageExamAnswer'
+      '400':
+        description: "失敗（無効なリクエスト）"
+      '404':
+        description: "失敗（回答が見つからない）"
+      '500':
+        description: "失敗（サーバーエラー）"
+packageVideo:
+  put:
+    tags:
+      - "Package"
+    summary: "パッケージ動画視聴ステータス更新"
+    description: "ユーザーがパッケージ動画を視聴したことを記録します"
+    parameters:
+      - name: package-content-id
+        in: path
+        required: true
+        description: "パッケージコンテンツID"
+        schema:
+          type: string
+      - name: video-id
+        in: path
+        required: true
+        description: "動画ID"
+        schema:
+          type: string
+    responses:
+      '204':
+        description: "成功"
+      '400':
+        description: "失敗（無効なリクエスト）"
+      '404':
+        description: "失敗（パッケージが見つからない）"
+      '500':
+        description: "失敗（サーバーエラー）"
+payment:
+  post:
+    tags:
+      - "Package"
+    summary: "パッケージプラン決済用ID作成"
+    description: 決済実行情報をDBに作成し、決済実行用のURLへリダイレクトへするためのセッションIDを取得
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - packagePlanId
+              - successRedirectUrl
+              - cancelRedirectUrl
+            properties:
+              packagePlanId:
+                type: string
+                description: "パッケージプランID"
+              successRedirectUrl:
+                type: string
+                example: "/success/page"
+                description: "決済成功時にリダイレクトする画面のURLパス"
+              cancelRedirectUrl:
+                type: string
+                example: "/cancel/page"
+                description: "決済成功時にリダイレクトするURLパス"
+    responses:
+      "201":
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                packagePlanPaymentId:
+                  type: string
+                  example: "session_id"
+                  description: "パッケージプラン決済ID"
+                packagePlanId:
+                  type: string
+                  example: "session_id"
+                  description: "パッケージプランID"
+                userId:
+                  type: string
+                  example: "user_id"
+                  description: "ユーザID"
+                status:
+                  type: string
+                  example: "created"
+                  description: "決済状況"
+                sessionId:
+                  type: string
+                  example: "session_id"
+                  description: "セッションID"
+                createdAt:
+                  type: string
+                  format: date-time
+                  example: "2023-08-22T05:02:30.207Z"
+                  description: "作成日時"
+                updatedAt:
+                  type: string
+                  format: date-time
+                  example: "2023-09-27T12:26:52.352Z"
+                  description: "更新日時"
+paymentWebhook:
+  post:
+      tags:
+        - "Package"
+      summary: パッケージプラン決済完了Webhook
+      description: Stripe Checkoutが決済完了時に実行。Stripe-SignatureによってStripeのみが実行できる
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: イベントID
+                type:
+                  type: string
+                  example: "checkout.session.completed"
+                  description: イベントタイプ。決済完了時のWebhookのためcheckout.session.completed以外は400エラー
+                data:
+                  type: object
+                  description: client_reference_idにデータベースの決済IDが入っている。ない場合は500エラー
+                api_version:
+                  type: string
+                  description: API version
+                created:
+                  type: integer
+                  description: イベント作成時のUnix timestamp
+              required:
+                - id
+                - type
+                - data
+                - api_version
+                - created
+      responses:
+        '200':
+          description: 決済完了処理完了
+        '400':
+          description: BadRequest
+        '401':
+          description: Unauthorized。Stripe-Signatureが一致しない
+        '500':
+          description: InternalServerError
+      parameters:
+        - in: header
+          name: Stripe-Signature
+          required: true
+          schema:
+            type: string
+          description: The signature of the event sent by Stripe
+components:
+  requestBodies:
+    BasePackage:
+      properties:
+        thumbnail:
+          type: binary
+          example: "binary"
+          description: "サムネイル画像データ"
+        title:
+          type: string
+          example: "パッケージ名"
+          description: "パッケージ名"
+        packageCategoriesId:
+          type: array
+          items:
+            type: integer
+            description: "タグID"
+          description: "パッケージカテゴリ"
+        difficulty:
+          type: string
+          example: "beginner"
+          description: "難易度"
+          enum:
+            - "beginner"
+            - "intermediate"
+            - "advanced"
+        startAt:
+          type: string
+          format: date-time
+          example: "2020-01-01 00:00:00"
+          description: "掲載開始日時"
+        endAt:
+          type: string
+          format: date-time
+          example: "2020-01-01 00:00:00"
+          description: "掲載終了日時"
+        startDurationAt:
+          type: string
+          format: date-time
+          example: "2020-01-01 00:00:00"
+          description: "受講開始日"
+        endDurationAt:
+          type: string
+          format: date-time
+          example: "2020-01-01 00:00:00"
+          description: "受講終了日"
+        summary:
+          type: string
+          example: "<p>HTMLメッセージが入ります</p>"
+          description: "概要"
+        tags:
+          $ref: './tag.yml#/components/schemas/CreateTag'
+    Package:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - title
+              - startAt
+              - endAt
+              - packageCategoryIds
+              - packagePlans
+              - thumbnail
+              - startDurationAt
+              - endDurationAt
+            properties:
+              title:
+                type: string
+                example: "パッケージ名"
+                description: "パッケージ名"
+              packageCategoryIds:
+                type: array
+                items:
+                  type: string
+                  example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+                  description: "タグID"
+                description: "パッケージカテゴリ"
+              thumbnail:
+                type: object
+                $ref: "./file.yml#/components/schemas/CreateFile"
+              difficulty:
+                type: string
+                example: "beginner"
+                description: "難易度"
+                enum:
+                  - "beginner"
+                  - "intermediate"
+                  - "advanced"
+              startAt:
+
+                type: string
+                format: date-time
+                example: "2020-01-01 00:00:00"
+                description: "掲載開始日時"
+              endAt:
+                type: string
+                format: date-time
+                example: "2020-01-01 00:00:00"
+                description: "掲載終了日時"
+              startDurationAt:
+                type: string
+                format: date-time
+                example: "2020-01-01 00:00:00"
+                description: "受講開始日"
+              endDurationAt:
+                type: string
+                format: date-time
+                example: "2020-01-01 00:00:00"
+                description: "受講終了日"
+              files:
+                type: array
+                items:
+                  type: object
+                  $ref: "./file.yml#/components/schemas/CreateFile"
+                description: "概要の画像データ"
+              messageJson:
+                type: string
+                example: "<p>HTMLメッセージが入ります</p>"
+                description: "概要"
+              packagePlans:
+                type: array
+                description: "プラン"
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: "プラン名"
+                      description: "プラン名"
+                    price:
+                      type: integer
+                      example: 10000
+                      description: "価格"
+                    capacity:
+                      type: integer
+                      example: 100
+                      description: "受講可能人数"
+                    isMember:
+                      type: boolean
+                      example: true
+                      description: "会員用のプランかどうか"
+              packageContents:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      example: "コンテンツ名"
+                      description: "コンテンツ名"
+                    files:
+                      type: array
+                      items:
+                        type: object
+                        $ref: "./file.yml#/components/schemas/CreateFile"
+                      description: "概要のFileデータ"
+                    messageJson:
+                      type: string
+                      example: "<p>HTMLメッセージが入ります</p>"
+                      description: "概要"
+                    type:
+                      type: string
+                      example: "video"
+                      description: "コンテンツタイプ"
+                      enum:
+                        - "videoDocument"
+                        - "questionnaire"
+                        - "exam"
+                    sortNumber:
+                      type: integer
+                      example: 1
+                      description: "並び順"
+                    packageVideoDocumentContent:
+                      type: object
+                      description: "動画・資料コンテンツ"
+                      properties:
+                        thumbnail:
+                          type: array
+                          items:
+                            type: object
+                            $ref: "./file.yml#/components/schemas/CreateFile"
+                        video:
+                          type: array
+                          items:
+                            type: object
+                            $ref: "./file.yml#/components/schemas/CreateFile"
+                        documents:
+                          type: array
+                          items:
+                            type: object
+                            $ref: "./file.yml#/components/schemas/CreateFile"
+                    packageQuestionnaireContent:
+                      type: object
+                      description: "アンケートコンテンツ"
+                      properties:
+                        mainDescription:
+                          type: string
+                          example: "メイン説明"
+                          description: "説明"
+                        subDescription:
+                          type: string
+                          example: "サブ説明"
+                          description: "説明"
+                        type:
+                          type: string
+                          example: "radio"
+                          description: "質問タイプ"
+                          enum:
+                            - "text"
+                            - "radio"
+                            - "checkbox"
+                            - "pulldown"
+                        sortNumber:
+                          type: integer
+                          example: 1
+                          description: "並び順"
+                        packageQuestionnaireChoices:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              value:
+                                type: string
+                                example: "1"
+                                description: "選択肢の値"
+                              sortNumber:
+                                type: integer
+                                example: 1
+                                description: "並び順"
+                    packageExamContents:
+                      type: object
+                      properties:
+                        passingScore:
+                          nullable: true
+                          type: integer
+                          example: 100
+                          description: "合格点"
+                        questions:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              mainDescription:
+                                type: string
+                                example: "質問"
+                                description: "質問内容"
+                              type:
+                                type: string
+                                example: "radio"
+                                description: "質問タイプ"
+                                enum:
+                                  - "text"
+                                  - "radio"
+                                  - "checkbox"
+                                  - "pulldown"
+                              subDescription:
+                                type: string
+                                example: "説明"
+                                description: "説明"
+                              sortNumber:
+                                type: integer
+                                example: 1
+                                description: "並び順"
+                              choices:
+                                type: array
+                                items:
+                                  properties:
+                                    value:
+                                      type: string
+                                      example: "1"
+                                      description: "選択肢の値"
+                                    isCorrect:
+                                      type: boolean
+                                      example: true
+                                      description: "正解かどうか"
+                                    sortNumber:
+                                      type: integer
+                                      example: 1
+                                      description: "並び順"
+  schemas:
+    PackageQuestionAnswer:
+      type: object
+      properties:
+        packageQuestionAnswerId:
+          type: integer
+          example: 1
+          description: "パッケージ回答ID"
+        answer:
+          nullable: true
+          type: object
+          additionalProperties: true
+          description: "アンケートデータまたは試験の回答データ"
+        memberId:
+          type: integer
+          example: 1
+          description: "会員ID"
+        packageContentId:
+          type: integer
+          example: 1
+          description: "コンテンツID"
+    PackageCategory:
+      $ref: './packageCategory.yml#/components/schemas/PackageCategory'
+    BasePackagePlan:
+      properties:
+        name:
+          type: string
+          example: "プラン名"
+          description: "プラン名"
+        price:
+          type: integer
+          example: 10000
+          description: "価格"
+        capacity:
+          type: integer
+          example: 100
+          description: "受講可能人数"
+        isMember:
+          type: boolean
+          example: true
+          description: "会員用のプランかどうか"
+    PackagePlan:
+      properties:
+        packagePlanId:
+          type: string
+          example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+          description: "プランID"
+        name:
+          type: string
+          example: "プラン名"
+          description: "プラン名"
+        ProviderPriceId:
+          type: string
+          example: "price_1HJZ1tFBA7TE8PDT8BYAD9BW"
+          description: "StripeのプランID"
+        price:
+          type: integer
+          example: 10000
+          description: "価格"
+        capacity:
+          type: integer
+          example: 100
+          description: "受講可能人数"
+        isMember:
+          type: boolean
+          example: true
+          description: "会員用のプランかどうか"
+    BasePackageContentFile:
+      properties:
+        name:
+          type: string
+          example: "ファイル名"
+          description: "ファイル名"
+        file:
+          type: binary
+          example: "binary"
+          description: "ファイルデータ"
+        fileType:
+          type: string
+          example: "video"
+          description: "ファイルタイプ"
+          enum:
+            - "video"
+            - "document"
+    ContentQuestionnaire:
+      properties:
+        contentQuestionnaireId:
+          type: integer
+          example: 1
+          description: "コンテンツアンケートID"
+    ListPackage:
+      properties:
+        packageId:
+          type: integer
+          example: 1
+          description: "パッケージID"
+        thumbnailUrl:
+          type: string
+          example: "https://example.com"
+          description: "サムネイル"
+        packageCategories:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageCategory'
+          description: "パッケージカテゴリ"
+        difficulty:
+          type: string
+          example: "beginner"
+          description: "難易度"
+          enum:
+            - "beginner"
+            - "intermediate"
+            - "advanced"
+        startAt:
+          type: string
+          format: date-time
+          example: "2020-01-01 00:00:00"
+          description: "掲載開始日時"
+        endAt:
+          type: string
+          format: date-time
+          example: "2020-01-01 00:00:00"
+          description: "掲載終了日時"
+        startDurationAt:
+          type: string
+          format: date-time
+          example: "2020-01-01 00:00:00"
+          description: "受講開始日"
+        endDurationAt:
+          type: string
+          format: date-time
+          example: "2020-01-01 00:00:00"
+          description: "受講終了日"
+    Package:
+      properties:
+        packageId:
+          type: string
+          example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+          description: "パッケージID"
+        title:
+          type: string
+          example: "パッケージ名"
+          description: "パッケージ名"
+        packageCategories:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageCategory'
+          description: "パッケージカテゴリ"
+        difficulty:
+          type: string
+          example: "beginner"
+          description: "難易度"
+          enum:
+            - "beginner"
+            - "intermediate"
+            - "advanced"
+        startAt:
+          type: string
+          format: date-time
+          example: "2020-01-01 00:00:00"
+          description: "掲載開始日時"
+        endAt:
+          type: string
+          format: date-time
+          example: "2020-01-01 00:00:00"
+          description: "掲載終了日時"
+        startDurationAt:
+          type: string
+          format: date-time
+          example: "2020-01-01 00:00:00"
+          description: "受講開始日"
+        endDurationAt:
+          type: string
+          format: date-time
+          example: "2020-01-01 00:00:00"
+          description: "受講終了日"
+        files:
+          type: array
+          items:
+            type: object
+            $ref: './file.yml#/components/schemas/File'
+        messageJson:
+          type: string
+          example: "<p>HTMLメッセージが入ります</p>"
+          description: "概要"
+        packagePlans:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackagePlan'
+          description: "プラン"
+        packageContents:
+          type: array
+          items:
+            type: object
+            $ref: '#/components/schemas/PackageContent'
+          description: "コンテンツ"
+    PackageContent:
+      type: object
+      properties:
+        packageContentId:
+          type: string
+          example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+          description: "コンテンツID"
+        type:
+          type: string
+          example: "video"
+          description: "コンテンツタイプ"
+          enum:
+            - "videoDocument"
+            - "questionnaire"
+            - "exam"
+        title:
+          type: string
+          example: "コンテンツ名"
+          description: "コンテンツ名"
+        files:
+          type: array
+          items:
+            type: object
+            $ref: './file.yml#/components/schemas/File'
+        messageJson:
+          type: string
+          example: "<p>HTMLメッセージが入ります</p>"
+          description: "概要"
+        sortNumber:
+          type: integer
+          example: 1
+          description: "並び順"
+        contentType:
+          type: string
+          example: "videoDocument"
+          description: "コンテンツタイプ"
+          enum:
+            - "videoDocument"
+            - "questionnaire"
+            - "exam"
+        videoDocument:
+          type: object
+          description: "動画・資料コンテンツ"
+          $ref: '#/components/schemas/PackageVideoDocumentContent'
+          nullable: true
+        questionnaires:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageQuestionnaireContent'
+          description: "アンケート"
+          nullable: true
+        exam:
+          type: object
+          $ref: '#/components/schemas/PackageExamContent'
+          description: "試験"
+          nullable: true
+    PackageVideoDocumentContent:
+      type: object
+      properties:
+        packageVideoDocumentContentId:
+          type: string
+          example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+          description: "動画・資料コンテンツID"
+        thumbnail:
+          type: object
+          $ref: './file.yml#/components/schemas/File'
+          description: "サムネイル画像ファイル"
+        videos:
+          type: array
+          items:
+            type: object
+            $ref: './file.yml#/components/schemas/File'
+          description: "動画コンテンツファイル"
+        documents:
+          type: array
+          items:
+            type: object
+            $ref: './file.yml#/components/schemas/File'
+          description: "資料コンテンツファイル"
+    PackageQuestionnaireContent:
+      type: object
+      properties:
+        packageQuestionnaireContentId:
+          type: string
+          example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+          description: "質問ID"
+        mainDescription:
+          type: string
+          example: "質問"
+          description: "質問内容"
+        type:
+          type: string
+          example: "radio"
+          description: "質問タイプ"
+          enum:
+            - "radio"
+            - "checkbox"
+            - "text"
+            - "pulldown"
+        subDescription:
+          type: string
+          example: "説明"
+          description: "説明"
+        sortNumber:
+          type: integer
+          example: 1
+          description: "並び順"
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageQuestionnaireQuestionChoice'
+          description: "選択肢"
+    PackageQuestionnaireQuestionChoice:
+      type: object
+      properties:
+        packageQuestionnaireQuestionChoiceId:
+          type: string
+          example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+          description: "選択肢ID"
+        value:
+          type: string
+          example: "1"
+          description: "選択肢の値"
+        sortNumber:
+          type: integer
+          example: 1
+          description: "並び順"
+    PackageQuestionnaireAnswer:
+      type: object
+      properties:
+        packageQuestionnaireContentAnswerId:
+          type: string
+          example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+          description: "アンケート回答ID"
+        packageContent:
+          $ref: '#/components/schemas/PackageContent'
+        packageQuestionnaireAnswerQuestions:
+          type: array
+          items:
+            type: object
+            properties:
+              packageQuestionnaireContentAnswerQuestionId:
+                type: string
+                example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+                description: "回答したQuestionのAnswerID"
+              packageQuestionnaireContent:
+                $ref: '#/components/schemas/PackageQuestionnaireContent'
+              packageQuestionnaireChoices:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PackageQuestionnaireQuestionChoice'
+              textAnswer:
+                type: string
+                example: "回答"
+                description: "回答したテキスト"
+    PackageExamContent:
+      type: object
+      properties:
+        packageExamContentId:
+          type: string
+          example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+          description: "質問ID"
+        passingScore:
+          nullable: true
+          type: integer
+          example: 100
+          description: "合格点"
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageExamQuestions'
+          description: "質問"
+    PackageExamQuestions:
+      type: object
+      properties:
+        packageExamQuestionId:
+          type: integer
+          example: 1
+          description: "質問ID"
+        mainDescription:
+          type: string
+          example: "質問"
+          description: "質問内容"
+        type:
+          type: string
+          example: "radio"
+          description: "質問タイプ"
+          enum:
+            - "text"
+            - "radio"
+            - "checkbox"
+            - "pulldown"
+        subDescription:
+          type: string
+          example: "説明"
+          description: "説明"
+        sortNumber:
+          type: integer
+          example: 1
+          description: "並び順"
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/PackageExamQuestionChoice'
+          description: "選択肢"
+    PackageExamQuestionChoice:
+      type: object
+      properties:
+        packageExamQuestionChoiceId:
+          type: integer
+          example: 1
+          description: "選択肢ID"
+        label:
+          type: string
+          example: "選択肢"
+          description: "選択肢"
+        value:
+          type: string
+          example: "1"
+          description: "選択肢の値"
+        sortNumber:
+          type: integer
+          example: 1
+          description: "並び順"
+    PackageExamAnswer:
+      type: object
+      properties:
+        packageExamContentAnswerId:
+          type: string
+          example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+          description: "試験回答ID"
+        packageExamContent:
+          $ref: '#/components/schemas/PackageExamContent'
+        packageExamContentAnswerQuestions:
+          type: array
+          items:
+            type: object
+            properties:
+              packageExamContentAnswerQuestionId:
+                type: string
+                example: "01HFQK99F9QX8JW8AP7B9ZF82R"
+                description: "回答したQuestionのAnswerID"
+              packageExamContentQuestion:
+                $ref: '#/components/schemas/PackageExamQuestions'
+              packageExamContentChoices:
+                $ref: '#/components/schemas/PackageExamQuestionChoice'
+              isCorrect:
+                type: boolean
+                example: true
+                description: "問題に正解したかどうか"

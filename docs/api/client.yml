@@ -1,0 +1,124 @@
+index:
+  get:
+    tags:
+      - "Master"
+      - "Client"
+    summary: "企業一覧取得"
+    description: "企業一覧を取得します。"
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Client'
+  post:
+    tags:
+      - "Master"
+      - "Client"
+    summary: "企業登録"
+    description: "企業を新規登録します。"
+    requestBody:
+      $ref: '#/components/requestBodies/Client'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Client'
+clientId:
+  get:
+    tags:
+      - "Master"
+      - "Client"
+    summary: "企業詳細取得"
+    description: "企業詳細を取得します。"
+    parameters:
+      - name: clientId
+        in: path
+        required: true
+        description: "企業ID"
+        schema:
+          type: string
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Client'
+  put:
+    tags:
+      - "Master"
+      - "Client"
+    summary: "企業詳細更新"
+    description: "企業詳細を更新します。"
+    parameters:
+      - name: clientId
+        in: path
+        required: true
+        description: "企業ID"
+        schema:
+          type: string
+    requestBody:
+      $ref: '#/components/requestBodies/Client'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Client'
+  delete:
+    tags:
+      - "Master"
+      - "Client"
+    summary: "企業削除"
+    description: "企業を削除します。"
+    parameters:
+      - name: clientId
+        in: path
+        required: true
+        description: "企業ID"
+        schema:
+          type: string
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Client'
+components:
+  requestBodies:
+    Client:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - name
+            properties:
+              name:
+                type: string
+                example: "企業名"
+                description: "掲載先企業名"
+  schemas:
+    Client:
+      type: object
+      properties:
+        clientId:
+          type: string
+          example: "01HF314S7EABD4QSF3XYNCCJXN"
+          description: "企業ID"
+        name:
+          type: string
+          example: "日本臨床工学技士会会員情報システムe-プリバド"
+          description: "企業名"

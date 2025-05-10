@@ -1,0 +1,608 @@
+index:
+  get:
+    tags:
+      - "Member"
+    summary: "会員一覧取得"
+    description: "会員一覧を取得します。"
+    parameters:
+      - name: q
+        in: query
+        required: false
+        description: "曖昧検索 (名前, loginID, 企業名, 営業所名・支店名, 部署名, 所属都道府県技士会)"
+        schema:
+          type: string
+      - name: skip
+        in: query
+        required: false
+        description: "スキップ件数"
+        schema:
+          type: integer
+      - name: limit
+        in: query
+        required: false
+        description: "取得件数"
+        schema:
+          type: integer
+      - name: order
+        in: query
+        required: false
+        description: "並び順"
+        schema:
+          type: string
+          enum: [ asc, desc ]
+      - name: order-by
+        in: query
+        required: false
+        description: "並び順の対象(デフォルトcreated_at)"
+        schema:
+          type: string
+          enum: [ created_at, name, login_id, office_name, office_branch, office_department, date_agree ]
+      - name: status
+        in: query
+        required: false
+        description: "ステータス"
+        schema:
+          $ref: "#/components/Status"
+      - name: user-type
+        in: query
+        required: false
+        description: "会員種別"
+        schema:
+          $ref: "./userType.yml#/components/schemas/UserType"
+      - name: external-organization-id
+        in: query
+        required: false
+        description: "所属都道府県技士会のprefectureID"
+        schema:
+          type: string
+          example: "1"
+      - name: date-agree-nendo
+        in: query
+        required: false
+        description: "年度(数字4桁) JSTの年度でフィルターする"
+        schema:
+          type: integer
+    responses:
+      "200":
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                list:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Member"
+                total:
+                  type: integer
+                  example: 1
+                  description: "総件数"
+  post:
+    tags:
+      - "Member"
+    summary: "会員新規登録"
+    description: |
+      会員情報を新規登録します。
+      loginIdはメールアドレスから自動生成して登録してください
+    requestBody:
+      required: true
+      content:
+        application/json:
+          $ref: "#/components/requestBodies/CreateMember"
+    responses:
+      "200":
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Member"
+
+bulk-upsert:
+  post:
+    tags:
+      - "Member"
+    summary: "会員情報一括更新"
+    description: |
+      CSVファイルを使って会員情報を一括で登録します。
+      - 備考
+        - 拡張子がCSV形式であること
+        - 全件に対し、バリデーションを実施する
+          - バリデーションエラーがある場合は、エラー内容を返却する
+        - 一致するメールアドレスがない場合は、新規登録する
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: "#/components/requestBodies/CreateMember/schema"
+    responses:
+      "200":
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Member"
+
+membersId:
+  get:
+    tags:
+      - "Member"
+    summary: "会員詳細取得"
+    description: "会員詳細を取得します。"
+    parameters:
+      - name: memberId
+        in: path
+        required: true
+        description: "ユーザーID"
+        schema:
+          type: integer
+    responses:
+      "200":
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Member"
+  put:
+    tags:
+      - "Member"
+    summary: "会員情報更新"
+    description: |
+      会員情報を更新します。
+      管理者以外不可。
+    parameters:
+      - name: memberId
+        in: path
+        required: true
+        description: "ユーザーID"
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          $ref: "#/components/requestBodies/UpdateMember"
+  delete:
+    tags:
+      - "Member"
+    summary: "ユーザー削除"
+    description: "指定されたIDのユーザー情報を削除します。管理者のみ実行可能"
+    parameters:
+      - name: memberId
+        in: path
+        required: true
+        description: "ユーザーID"
+        schema:
+          type: integer
+    responses:
+      "204":
+        description: "成功（コンテンツなし）"
+      "404":
+        description: "失敗（パッケージが見つからない）"
+      "400":
+        description: "失敗（無効なリクエスト）"
+updateFromMe:
+  put:
+    tags:
+      - "Member"
+    summary: "自身の会員情報更新"
+    description: "自身の会員情報を更新します。"
+    parameters:
+      - name: memberId
+        in: path
+        required: true
+        description: "ユーザーID"
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          $ref: "#/components/requestBodies/UpdateMemberFromMe"
+components:
+  Status:
+    type: string
+    enum: [仮会員, 承認待ち, 本会員, 否認, 有効期限切, 入金待ち, 退会, 利用停止]
+  Gender:
+    type: string
+    enum: [男性, 女性, その他]
+    description: "性別（男性, 女性, その他）"
+  SendTo:
+    type: string
+    enum: [未使用, 自宅, 勤務先]
+    description: "送付先（未使用, 自宅, 勤務先）"
+  requestBodies:
+    CreateMember:
+      schema:
+        type: object
+        required:
+          - "userType"
+        properties:
+          email:
+            type: string
+            format: email
+            example: "test@test.com"
+            description: "メールアドレス"
+          firstName:
+            type: string
+            example: firstName
+            description: "名"
+          lastName:
+            type: string
+            example: lastName
+            description: "姓"
+          lastNameKana:
+            type: string
+            description: "姓（カナ）"
+          firstNameKana:
+            type: string
+            description: "名（カナ）"
+          gender:
+            $ref: "#/components/Gender"
+          birthday:
+            type: string
+            format: date
+            example: "1993-03-22"
+            description: "生年月日"
+          occupationId:
+            type: string
+            example: "0000004JFGEQQB6C3YH2FTMEVC"
+          licenseNumber:
+            type: string
+            description: "免許番号"
+          externalOrganizationPrefectureId:
+            type: string
+            example: "1"
+          sendTo:
+            $ref: "#/components/SendTo"
+          postcode:
+            type: string
+            example: "0000000"
+            description: "自宅郵便番号"
+          prefectureId:
+            type: string
+            example: "1"
+          city:
+            type: string
+            example: "青森市"
+            description: "自宅市区町村"
+          address:
+            type: string
+            example: "ホゲ町1-2-3"
+            description: "自宅住所"
+          building:
+            type: string
+            example: "ステラビルディング901"
+            description: "自宅建物名"
+          phone:
+            type: string
+            description: "電話番号"
+          position:
+            type: string
+            description: "役職"
+          officeName:
+            type: string
+            example: kyoto大学
+            description: "勤務先名"
+          officeBranch:
+            type: string
+            description: "勤務先支店名"
+          officeDepartment:
+            type: string
+            example: "-"
+            description: "勤務先部署名"
+          officePostcode:
+            type: string
+            example: "0000000"
+            description: "勤務先郵便番号"
+          officePrefectureId:
+            type: string
+            example: "1"
+          officeCity:
+            type: string
+            example: "青森市"
+            description: "勤務先市区町村"
+          officeAddress:
+            type: string
+            example: "ホゲ町1-2-3"
+            description: "勤務先住所"
+          officeBuilding:
+            type: string
+            example: "ステラビルディング901"
+            description: "勤務先建物名"
+          officePhone:
+            type: string
+            example: "00011112222"
+            description: "勤務先電話番号"
+          status:
+            $ref: "#/components/Status"
+          userType:
+            $ref: "./userType.yml#/components/schemas/UserType"
+          remarks:
+            type: string
+            example: "remarks"
+            description: "メモ"
+    UpdateMember:
+      schema:
+        type: object
+        required:
+          - "userType"
+        properties:
+          loginId:
+            type: integer
+            example: 150116
+            description: "プロフィールID"
+          email:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/email"
+          firstName:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/firstName"
+          lastName:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/lastName"
+          lastNameKana:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/lastNameKana"
+          firstNameKana:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/firstNameKana"
+          gender:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/gender"
+          birthday:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/birthday"
+          occupationId:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/occupationId"
+          licenseNumber:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/licenseNumber"
+          externalOrganizationPrefectureId:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/externalOrganizationPrefectureId"
+          sendTo:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/sendTo"
+          postcode:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/postcode"
+          prefecture:
+            $ref: "./prefecture.yml#/components/schemas/Prefecture"
+          city:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/city"
+          address:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/address"
+          building:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/building"
+          phone:
+            $ref: '#/components/requestBodies/CreateMember/schema/properties/phone'
+          position:
+            $ref: '#/components/requestBodies/CreateMember/schema/properties/position'
+          officeName:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/officeName"
+          officeBranch:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/officeBranch"
+          officeDepartment:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/officeDepartment"
+          officePostcode:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/officePostcode"
+          officePrefecture:
+            $ref: "./prefecture.yml#/components/schemas/Prefecture"
+          officeCity:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/officeCity"
+          officeAddress:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/officeAddress"
+          officeBuilding:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/officeBuilding"
+          officePhone:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/officePhone"
+          status:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/status"
+          userType:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/userType"
+          remarks:
+            $ref: "#/components/requestBodies/CreateMember/schema/properties/remarks"
+    UpdateMemberFromMe:
+      schema:
+        type: object
+        required:
+          - "lastName"
+          - "firstName"
+          - "lastNameKana"
+          - "gender"
+          - "birthday"
+          - "occupationId"
+          - "licenseNumber"
+          - "externalOrganization"
+          - "sendTo"
+          - "postcode"
+          - "prefectures"
+          - "city"
+          - "address"
+          - "officeName"
+          - "officePostcode"
+          - "officePrefectures"
+          - "officeCity"
+          - "userType"
+          - "status"
+        properties:
+          externalOrganizationPrefectureId:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/externalOrganizationPrefectureId"
+          sendTo:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/sendTo"
+          postcode:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/postcode"
+          prefecture:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/prefecture"
+          city:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/city"
+          address:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/address"
+          building:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/building"
+          phone:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/phone"
+          officeName:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/officeName"
+          officeBranch:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/officeBranch"
+          officeDepartment:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/officeDepartment"
+          officePostcode:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/officePostcode"
+          officePrefecture:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/officePrefecture"
+          officeCity:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/officeCity"
+          officeAddress:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/officeAddress"
+          officeBuilding:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/officeBuilding"
+          officePhone:
+            $ref: "#/components/requestBodies/UpdateMember/schema/properties/officePhone"
+  schemas:
+    Occupation:
+      $ref: "./occupation.yml#/components/schemas/Occupation"
+    Prefecture:
+      $ref: "./prefecture.yml#/components/schemas/Prefecture"
+    User:
+      type: object
+      properties:
+        userId:
+          type: string
+          example: "01FVSHW3S537KKHBRMSA418ATB"
+          description: "ユーザーID"
+        loginId:
+          type: string
+          example: "150116"
+          description: "会員ID"
+        email:
+          type: string
+          format: email
+          example: "test@example.com"
+        userType:
+          $ref: "./userType.yml#/components/schemas/UserType"
+    Member:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        memberId:
+          type: string
+          example: "01FVSHW3S537KKHBRMSA418ATB"
+          description: "メンバーID"
+        firstName:
+          type: string
+          example: 太郎
+          description: "名"
+        lastName:
+          type: string
+          example: 山田
+          description: "姓"
+        firstNameKana:
+          type: string
+          example: タロウ
+          description: "名（カナ）"
+        lastNameKana:
+          type: string
+          example: ヤマダ
+          description: "姓（カナ）"
+        gender:
+          $ref: "#/components/Gender"
+        birthday:
+          type: string
+          format: date
+          example: "1993-03-22"
+          description: "生年月日"
+        occupation:
+          $ref: "#/components/schemas/Occupation"
+        licenseNumber:
+          type: string
+          description: "免許番号"
+        membershipYear:
+          type: string
+          example: "2023"
+          description: "会員年度"
+        externalOrganizationPrefecture:
+          $ref: "#/components/schemas/Prefecture"
+        sendTo:
+          $ref: "#/components/SendTo"
+        dateAgree:
+          type: string
+          example: "2023-08-22T05:01:00Z"
+          format: date-time
+          description: "詳細不明 要調査"
+        postcode:
+          type: string
+          example: "0000000"
+          description: "自宅郵便番号"
+        prefecture:
+          $ref: "#/components/schemas/Prefecture"
+        city:
+          type: string
+          example: "-"
+          description: "自宅市区町村"
+        address:
+          type: string
+          example: "-"
+          description: "自宅住所"
+        building:
+          type: string
+          description: "自宅建物名"
+        phone:
+          type: string
+          description: "電話番号"
+        officeName:
+          type: string
+          example: kyoto大学
+          description: "勤務先名"
+        officeBranch:
+          type: string
+          example: "医学部"
+          description: "勤務先支店名"
+        officeDepartment:
+          type: string
+          example: "医学科"
+          description: "勤務先部署名"
+        position:
+          type: string
+          example: "教授"
+          description: "役職"
+        officePostcode:
+          type: string
+          example: "0000000"
+          description: "勤務先郵便番号"
+        officePrefecture:
+          $ref: "#/components/schemas/Prefecture"
+        officeCity:
+          type: string
+          example: "-"
+          description: "勤務先市区町村"
+        officeAddress:
+          type: string
+          example: "-"
+          description: "勤務先住所"
+        officeBuilding:
+          type: string
+          description: "勤務先建物名"
+        officePhone:
+          type: string
+          example: "00011112222"
+          description: "勤務先電話番号"
+        status:
+          $ref: "#/components/Status"
+        remarks:
+          type: string
+          example: "備考です。"
+          description: "備考"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2023-03-22T02:28:26.854590Z"
+          description: "作成日時"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2023-08-10T09:40:53.021409Z"
+          description: "更新日時"

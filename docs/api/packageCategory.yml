@@ -1,0 +1,158 @@
+index:
+  get:
+    tags:
+      - "Master"
+      - "Package"
+      - "PackageCategory"
+    summary: "パッケージカテゴリ一覧取得"
+    description: "パッケージカテゴリ一覧を取得します。"
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PackageCategory'
+  post:
+    tags:
+      - "Master"
+      - "Package"
+      - "PackageCategory"
+    summary: "パッケージカテゴリ登録"
+    description: |
+      - パッケージのカテゴリが登録可能。
+      - 管理者のみ実行可能。
+    requestBody:
+      $ref: '#/components/requestBodies/PackageCategory'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PackageCategory'
+
+packageCategoryId:
+  get:
+    tags:
+      - "Master"
+      - "Package"
+      - "PackageCategory"
+    summary: "パッケージのカテゴリ情報を一件のみ取得する"
+    description: |
+      - パッケージカテゴリを一件のみ取得する
+      - 管理者のみ実行可能
+    parameters:
+      - name: archiveCategoryId
+        in: path
+        required: true
+        description: "パッケージカテゴリID"
+        schema:
+          type: integer
+  put:
+    tags:
+      - "Master"
+      - "Package"
+      - "PackageCategory"
+    summary: "パッケージカテゴリ更新"
+    description: |
+      - パッケージのカテゴリが更新可能。
+      - 管理者のみ実行可能。
+    parameters:
+      - name: packageCategoryId
+        in: path
+        required: true
+        description: "パッケージカテゴリID"
+        schema:
+          type: integer
+    requestBody:
+      $ref: '#/components/requestBodies/PackageCategory'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PackageCategory'
+  delete:
+    tags:
+      - "Master"
+      - "Package"
+      - "PackageCategory"
+    summary: "パッケージカテゴリ削除"
+    description: |
+      - 指定されたIDのパッケージカテゴリ情報を削除します。
+      - 管理者のみ実行可能
+    parameters:
+      - name: packageCategoryId
+        in: path
+        required: true
+        description: "パッケージカテゴリID"
+        schema:
+          type: integer
+    responses:
+      '204':
+        description: "成功"
+      '404':
+        description: "失敗"
+      '400':
+        description: "失敗"
+
+components:
+  requestBodies:
+    PackageCategory:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - courseCategory
+              - name
+              - color
+            properties:
+              courseCategory:
+                type: string
+                example: "optional"
+                description: "コースカテゴリ"
+                enum:
+                  - "optional"
+                  - "compulsory"
+                  - "designated"
+              name:
+                type: string
+                example: "キャンペーン"
+                description: "パッケージカテゴリ名"
+              color:
+                type: string
+                example: "red"
+                description: "パッケージカテゴリの色"
+  schemas:
+    PackageCategory:
+      type: object
+      properties:
+        packageCategoryId:
+          type: integer
+          example: 10
+          description: "カテゴリID"
+        courseCategory:
+          type: string
+          example: "optional"
+          description: "コースカテゴリ"
+          enum:
+            - "optional"
+            - "compulsory"
+            - "designated"
+        name:
+          type: string
+          example: "セミナー"
+          description: "カテゴリ名"
+        color:
+          type: string
+          example: "red"
+          description: "パッケージカテゴリの色"

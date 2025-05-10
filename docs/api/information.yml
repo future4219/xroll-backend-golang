@@ -1,0 +1,312 @@
+index:
+  get:
+    tags:
+      - "Information"
+    summary: "お知らせ一覧取得"
+    description: |
+      管理者権限以外の場合は、計算期間内のお知らせのみ取得します。
+    parameters:
+      - name: q
+        in: query
+        required: false
+        description: "文字列あいまい検索(タイトルの文字列に部分一致するものを検索)"
+        schema:
+          type: string
+          example: "テストタイトル"
+      - name: skip
+        in: query
+        required: false
+        description: "スキップ数"
+        schema:
+          type: integer
+          example: 0
+      - name: limit
+        in: query
+        required: false
+        description: "取得件数"
+        schema:
+          type: integer
+          example: 10
+      - name: tag-ids
+        in: query
+        required: false
+        description: "タグID (複数指定の場合はカンマ区切り)"
+        schema:
+          type: string
+          example: "tagId1,tagId2"
+      - name: client-ids
+        in: query
+        required: false
+        description: "掲載先企業ID (複数指定の場合はカンマ区切り)"
+        schema:
+          type: string
+          example: "clientId1,clientId2"
+      - name: "information-category-ids"
+        in: query
+        required: false
+        description: "お知らせカテゴリID (複数指定の場合はカンマ区切り)"
+        schema:
+          type: string
+          example: "informationCategoryId1,informationCategoryId2"
+      - name: start-at-from
+        in: query
+        required: false
+        description: "掲載開始日時 (管理者のみ指定可能)"
+        schema:
+          type: string
+          format: date-time
+          example: "2023-08-22T05:01:00Z"
+      - name: end-at-to
+        in: query
+        required: false
+        description: "掲載開始日時 (管理者のみ指定可能)"
+        schema:
+          type: string
+          format: date-time
+          example: "2099-12-31T14:59:00Z"
+
+    responses:
+      "200":
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                total:
+                  type: integer
+                  example: 1
+                  description: "総件数"
+                list:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Information"
+      "400":
+        description: "失敗（無効なリクエスト）"
+  post:
+    tags:
+      - "Information"
+    summary: "お知らせ情報登録"
+    description: お知らせ情報を新規登録します
+    requestBody:
+      $ref: "#/components/requestBodies/Information"
+    responses:
+      "201":
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Information"
+      "400":
+        description: "失敗（無効なリクエスト）"
+      "401":
+        description: "失敗 (認証エラー)"
+      "403":
+        description: "失敗 (権限なし)"
+      "404":
+        description: "失敗 (tag | informationCategory | client が見つからない)"
+
+informationId:
+  get:
+    tags:
+      - "Information"
+    summary: "お知らせ詳細取得"
+    description: |
+      お知らせ詳細を取得します。
+      管理者権限以外の場合は、掲載期間内のお知らせである場合のみ取得可能です。
+    parameters:
+      - name: informationId
+        in: path
+        required: true
+        description: "お知らせID"
+        schema:
+          type: string
+          example: "01HF31FBA7TE8PDT8BYAD9BWFW"
+    responses:
+      "200":
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Information"
+      "400":
+        description: "失敗（無効なリクエスト）"
+      "401":
+        description: "失敗 (認証エラー)"
+      "403":
+        description: "失敗 (権限なし)"
+      "404":
+        description: "失敗 (お知らせが見つからない)"
+  put:
+    tags:
+      - "Information"
+    summary: "お知らせ詳細更新"
+    description: "お知らせ詳細を更新します。"
+    parameters:
+      - name: informationId
+        in: path
+        required: true
+        description: "お知らせID"
+        schema:
+          type: string
+    requestBody:
+      $ref: "#/components/requestBodies/Information"
+    responses:
+      "200":
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Information"
+      "400":
+        description: "失敗（無効なリクエスト）"
+      "401":
+        description: "失敗 (認証エラー)"
+      "403":
+        description: "失敗 (権限なし)"
+      "404":
+        description: "失敗 (お知らせ | tag | informationCategory | client が見つからない)"
+  delete:
+    tags:
+      - "Information"
+    summary: "お知らせ削除"
+    description: "指定されたIDのお知らせ情報を削除します。管理者のみ実行可能"
+    parameters:
+      - name: informationId
+        in: path
+        required: true
+        description: "お知らせID"
+        schema:
+          type: string
+    responses:
+      "204":
+        description: "成功（コンテンツなし）"
+      "404":
+        description: "失敗（お知らせ）"
+      "400":
+        description: "失敗（無効なリクエスト）"
+
+components:
+  requestBodies:
+    Information:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - startAt
+              - endAt
+              - title
+              - messageJson
+              - fileKeys
+              - tagIds
+              - clientIds
+              - categoryIds
+            properties:
+              startAt:
+                type: string
+                format: date-time
+                example: "2023-08-22T05:01:00Z"
+                description: "開始日時"
+              endAt:
+                type: string
+                format: date-time
+                example: "2099-12-31T14:59:00Z"
+                description: "終了日時"
+              title:
+                type: string
+                example: "てすとてすとてすと"
+                description: "タイトル"
+              messageJson:
+                type: string
+                example: "<p>テストのお知らせ</p>"
+                description: "メッセージを表現するjson形式のリッチテキスト"
+              files:
+                type: array
+                items:
+                  type: object
+                  $ref: "./file.yml#/components/schemas/CreateFile"
+              tagIds:
+                type: array
+                items:
+                  type: string
+                  description: "タグID"
+                  example: "01HF32BG1RPNX6PXQ5RBMKHXNA"
+              clientIds:
+                type: array
+                items:
+                  type: string
+                  description: "掲載先企業ID"
+                  example: "01HF32BG1RPNX6PXQ5RBMKHXNA"
+              categoryIds:
+                type: array
+                items:
+                  type: string
+                  description: "お知らせカテゴリID"
+                  example: "01HF32BG1RPNX6PXQ5RBMKHXNA"
+  schemas:
+    InformationCategory:
+      $ref: "./informationCategory.yml#/components/schemas/InformationCategory"
+    Client:
+      $ref: "./client.yml#/components/schemas/Client"
+    Information:
+      type: object
+      properties:
+        informationId:
+          type: string
+          example: "01HF31FBA7TE8PDT8BYAD9BWFW"
+          description: "お知らせID"
+        startAt:
+          type: string
+          format: date-time
+          example: "2023-08-22T05:01:00Z"
+          description: "開始日時"
+        endAt:
+          type: string
+          format: date-time
+          example: "2099-12-31T14:59:00Z"
+          description: "終了日時"
+        title:
+          type: string
+          example: "てすとてすとてすと"
+          description: "タイトル"
+        messageJson:
+          type: string
+          example: "<p>てすとのお知らせadfafadf</p>"
+          description: "メッセージを表現するjson形式のリッチテキスト"
+        createdUserId:
+          type: string
+          description: "作成ユーザID"
+          example: "01HF31FBA7TE8PDT8BYAD9BWFW"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2023-08-22T05:02:30.207Z"
+          description: "作成日時"
+        updatedUserId:
+          type: string
+          description: "更新ユーザID"
+          example: "01HF31FBA7TE8PDT8BYAD9BWFW"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2023-09-27T12:26:52.352Z"
+          description: "更新日時"
+        informationCategories:
+          type: array
+          items:
+            $ref: "#/components/schemas/InformationCategory"
+        clients:
+          type: array
+          items:
+            $ref: "#/components/schemas/Client"
+        tags:
+          type: array
+          items:
+            $ref: "./tag.yml#/components/schemas/Tag"
+        files:
+          type: array
+          items:
+            type: object
+            $ref: "./file.yml#/components/schemas/File"

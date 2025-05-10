@@ -1,0 +1,122 @@
+openapi: "3.0.3"
+info:
+  title: "日本臨床工学技士会会員情報システムe-プリバドAPI"
+  version: "1.0.1"
+
+paths:
+  /login:
+    $ref: "./auth.yml#/login"
+  /forget-password:
+    $ref: "./auth.yml#/forget-password"
+  /reset-password:
+    $ref: "./auth.yml#/reset-password"
+  /members:
+    $ref: "./member.yml#/index"
+  /members/{memberId}:
+    $ref: "./member.yml#/membersId"
+  /members/me:
+    $ref: "./member.yml#/updateFromMe"
+  /members/bulk-upsert:
+    $ref: "./member.yml#/bulk-upsert"
+  /information:
+    $ref: "./information.yml#/index"
+  /information/{informationId}:
+    $ref: "./information.yml#/informationId"
+  /packages:
+    $ref: "./package.yml#/index"
+  /packages/{package-id}:
+    $ref: "./package.yml#/packageId"
+  /packages/{package-id}/{video-id}:
+    $ref: "./package.yml#/packageVideo"
+  /packages/contents/questionnaires/{packageContentId}/answer:
+    $ref: "./package.yml#/packageContentQuestionnaireAnswer"
+  /packages/contents/exams/{packageContentId}/answer:
+    $ref: "./package.yml#/packageContentExamAnswer"
+  /packages/plans/payment:
+    $ref: "./package.yml#/payment"
+  /packages/plans/payment/webhook:
+    $ref: "./package.yml#/paymentWebhook"
+  /archives:
+    $ref: "./archive.yml#/index"
+  /archives/{archiveId}:
+    $ref: "./archive.yml#/archiveId"
+  /questionnaires:
+    $ref: "./questionnaire.yml#/index"
+  /questionnaires/{questionnairesId}:
+    $ref: "./questionnaire.yml#/questionnaireId"
+  /questionnaires/{questionnairesId}/answer:
+    $ref: "./questionnaire.yml#/questionnaireAnswer"
+  /questionnaires/{questionnairesId}/answer/member/{memberId}:
+    $ref: "./questionnaire.yml#/questionnaireAnswerUser"
+  /questionnaires/{questionnairesId}/answer/summary:
+    $ref: "./questionnaire.yml#/questionnaireAnswerSummary"
+  /elections:
+    $ref: "./election.yml#/index"
+  /elections/{electionId}:
+    $ref: "./election.yml#/electionId"
+  /elections/{electionsId}/answer:
+    $ref: "./election.yml#/electionAnswer"
+  /elections/{electionsId}/answer/member/{memberId}:
+    $ref: "./election.yml#/electionAnswerUser"
+  /elections/{electionsId}/answer/summary:
+    $ref: "./election.yml#/electionAnswerSummary"
+  /occupations:
+    $ref: "./occupation.yml#/index"
+  /userTypes:
+    $ref: "./userType.yml#/index"
+  /information-categories:
+    $ref: "./informationCategory.yml#/index"
+  /information-categories/{informationCategoryId}:
+    $ref: "./informationCategory.yml#/informationCategoryId"
+  /clients:
+    $ref: "./client.yml#/index"
+  /clients/{clientId}:
+    $ref: "./client.yml#/clientId"
+  /package-categories:
+    $ref: "./packageCategory.yml#/index"
+  /package-categories/{packageCategoryId}:
+    $ref: "./packageCategory.yml#/packageCategoryId"
+  /archive-categories:
+    $ref: "./archiveCategory.yml#/index"
+  /archive-categories/{archiveCategoryId}:
+    $ref: "./archiveCategory.yml#/archiveCategoryId"
+  /tags:
+    $ref: "./tag.yml#/index"
+  /tags/{tagId}:
+    $ref: "./tag.yml#/tagId"
+  /all-list:
+    $ref: "./allList.yml#/index"
+components:
+  schemas:
+    User:
+      $ref: "./member.yml#/components/schemas/User"
+    Information:
+      $ref: "./information.yml#/components/schemas/Information"
+    Occupation:
+      $ref: "./occupation.yml#/components/schemas/Occupation"
+    Election:
+      $ref: "./election.yml#/components/schemas/Election"
+    UserType:
+      $ref: "./userType.yml#/components/schemas/UserType"
+    InformationCategory:
+      $ref: "./informationCategory.yml#/components/schemas/InformationCategory"
+    ArchiveCategory:
+      $ref: "./archiveCategory.yml#/components/schemas/ArchiveCategory"
+    Client:
+      $ref: "./client.yml#/components/schemas/Client"
+    Prefecture:
+      $ref: "./prefecture.yml#/components/schemas/Prefecture"
+    PackageCategory:
+      $ref: "./packageCategory.yml#/components/schemas/PackageCategory"
+    Package:
+      $ref: "./package.yml#/components/schemas/Package"
+    Archive:
+      $ref: "./archive.yml#/components/schemas/Archive"
+    Questionnaire:
+      $ref: "./questionnaire.yml#/components/schemas/Questionnaire"
+    Tag:
+      $ref: "./tag.yml#/components/schemas/Tag"
+    File:
+      $ref: "./file.yml#/components/schemas/File"
+    AllList:
+      $ref: "./allList.yml#/components/schemas/AllList"

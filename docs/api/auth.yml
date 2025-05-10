@@ -1,0 +1,117 @@
+login:
+  post:
+    tags:
+      - "Auth"
+    summary: "ユーザーログイン"
+    description: "loginIdとpasswordを使用してログインできます。"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - loginId
+              - password
+            properties:
+              loginId:
+                type: string
+                description: "ログインID"
+              password:
+                type: string
+                format: password
+                description: "パスワード"
+    responses:
+      '200':
+        description: "ログイン成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: "ログイン成功後に生成されるトークン。"
+forget-password:
+  post:
+    tags:
+      - "Auth"
+    summary: "パスワード変更申請"
+    description: |
+      - loginIdが一致するユーザーが存在する場合
+        - 一意なtokenを生成する
+        tokenを含めたパスワード変更用画面のURLを生成し、ユーザーにメールで送信する
+      - loginIdが一致するユーザーが存在しない場合
+        -「ログインIDが一致するユーザーが存在しませんでした」のエラーメッセージを返す
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - loginId
+            properties:
+              loginId:
+                type: string
+                description: "ログインID"
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  description: "ok"
+reset-password:
+  post:
+    tags:
+      - "Auth"
+    summary: "パスワード変更"
+    description: |
+      - パスワード変更申請で生成されたtokenで認証し、ユーザーのパスワードを変更する
+      - 認証できなかった場合
+        - 400エラー
+    parameters:
+      - name: token
+        in: path
+        required: true
+        description: "パスワード変更申請時に生成された一意なtoken"
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - loginId
+            properties:
+              password:
+                type: string
+                description: "パスワード"
+    responses:
+      '200':
+        description: "ログイン成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  description: "ok"
+      '400':
+        description: "失敗"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  description: "ok"

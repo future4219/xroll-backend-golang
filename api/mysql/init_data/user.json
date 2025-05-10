@@ -1,0 +1,32 @@
+[
+  {
+    "id": "user1",
+    "name": "ユーザ名1",
+    "email": "user1@digeon.co"
+  },
+  {
+    "id": "user2",
+    "name": "ユーザ名2",
+    "email": "user2@digeon.co"
+  },
+  {
+    "id": "user3",
+    "name": "ユーザ名3",
+    "email": "user3@digeon.co"
+  },
+  {
+    "id": "user4",
+    "name": "ユーザ名4",
+    "email": "user4@digeon.co"
+  },
+  {
+    "id": "user5",
+    "name": "ユーザ名5",
+    "email": "user5@digeon.co"
+  },
+  {
+    "id": "user6",
+    "name": "ユーザ名6",
+    "email": "user6@digeon.co"
+  }
+]

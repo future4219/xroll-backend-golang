@@ -1,0 +1,135 @@
+index:
+  get:
+    tags:
+      - "Master"
+      - "Archive"
+      - "ArchiveCategory"
+    summary: "アーカイブカテゴリ一覧"
+    description: "アーカイブカテゴリの一覧を取得します。"
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ArchiveCategory'
+  post:
+    tags:
+      - "Master"
+      - "ArchiveCategory"
+    summary: "アーカイブカテゴリ登録"
+    description: |
+      - アーカイブのカテゴリが登録可能。
+      - 管理者のみ実行可能。
+    requestBody:
+      $ref: '#/components/requestBodies/ArchiveCategory'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArchiveCategory'
+
+archiveCategoryId:
+  get:
+    tags:
+      - "ArchiveCategory"
+      - "Master"
+    summary: "アーカイブのカテゴリ情報を一件のみ取得する"
+    description: |
+      - アーカイブカテゴリを一件のみ取得する
+      - 管理者のみ実行可能
+    parameters:
+      - name: archiveCategoryId
+        in: path
+        required: true
+        description: "アーカイブカテゴリID"
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArchiveCategory'
+  put:
+    tags:
+      - "Master"
+      - "ArchiveCategory"
+    summary: "アーカイブカテゴリ更新"
+    description: |
+      - アーカイブのカテゴリが更新可能。
+      - 管理者のみ実行可能。
+    parameters:
+      - name: archiveCategoryId
+        in: path
+        required: true
+        description: "アーカイブカテゴリID"
+        schema:
+          type: integer
+    requestBody:
+      $ref: '#/components/requestBodies/ArchiveCategory'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArchiveCategory'
+  delete:
+    tags:
+      - "Master"
+      - "ArchiveCategory"
+    summary: "アーカイブカテゴリ削除"
+    description: | 
+      - 指定されたIDのアーカイブカテゴリ情報を削除します。
+      - 管理者のみ実行可能
+    parameters:
+      - name: archiveCategoryId
+        in: path
+        required: true
+        description: "アーカイブカテゴリID"
+        schema:
+          type: integer
+    responses:
+      '204':
+        description: "成功"
+      '404':
+        description: "失敗"
+      '400':
+        description: "失敗"
+
+components:
+  requestBodies:
+    ArchiveCategory:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - name
+            properties:
+              name:
+                type: string
+                example: "キャンペーン"
+                description: "アーカイブカテゴリ名"
+  schemas:
+    ArchiveCategory:
+      type: object
+      properties:
+        archiveCategoryId:
+          type: integer
+          example: 10
+          description: "アーカイブカテゴリID"
+        name:
+          type: string
+          example: "アーカイブカテゴリ名"
+          description: "アーカイブカテゴリ名"

@@ -1,0 +1,147 @@
+index:
+  get:
+    tags:
+      - "Master"
+      - "Tag"
+    summary: "タグ一覧取得"
+    description:
+    parameters:
+      - name: q
+        in: query
+        required: false
+        description: "文字列あいまい検索(名前の文字列に部分一致するものを検索)"
+        schema:
+          type: string
+          example: "test-tag-name"
+      - name: skip
+        in: query
+        required: false
+        description: "スキップ数"
+        schema:
+          type: integer
+          example: 0
+      - name: limit
+        in: query
+        required: false
+        description: "取得件数"
+        schema:
+          type: integer
+          example: 10
+    responses:
+      "200":
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Tag"
+  post:
+    tags:
+      - "Master"
+      - "Tag"
+    summary: "タグ登録"
+    description: |
+      - タグが登録可能。
+      - 管理者のみ実行可能。
+    requestBody:
+      $ref: '#/components/requestBodies/Tag'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tag'
+tagId:
+  get:
+    tags:
+      - "Tag"
+      - "Master"
+    summary: "タグを一件のみ取得する"
+    description: |
+      - タグを一件のみ取得する
+      - 管理者のみ実行可能
+    parameters:
+      - name: tagId
+        in: path
+        required: true
+        description: "タグID"
+        schema:
+          type: string
+  put:
+    tags:
+      - "Master"
+      - "Tag"
+    summary: "タグ更新"
+    description: |
+      - タグが更新可能。
+      - 管理者のみ実行可能。
+    parameters:
+      - name: tagId
+        in: path
+        required: true
+        description: "タグID"
+        schema:
+          type: string
+    requestBody:
+      $ref: '#/components/requestBodies/Tag'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tag'
+  delete:
+    tags:
+      - "Master"
+      - "Tag"
+    summary: "タグ削除"
+    description: |
+      - 指定されたIDのタグを削除します。
+      - 管理者のみ実行可能
+    parameters:
+      - name: tagId
+        in: path
+        required: true
+        description: "タグID"
+        schema:
+          type: string
+    responses:
+      '204':
+        description: "成功"
+      '404':
+        description: "失敗"
+components:
+  requestBodies:
+    Tag:
+      schema:
+        type: array
+        description: "タグ"
+        items:
+          type: string
+  schemas:
+    Tag:
+      type: object
+      properties:
+        tagId:
+          type: string
+          description: "タグID"
+          example: "01HF324CK1FKBMJFC6ATB4VCFE"
+        name:
+          type: string
+          description: "タグ名"
+          example: "タグ1"
+    CreateTag:
+      type: array
+      description: |
+        タグ登録
+        存在する場合はIDをセットする
+        存在しない場合は、タグ情報をマスタに登録する
+      items:
+        type: string
+        example: "01HF324CK1FKBMJFC6ATB4VCFE"

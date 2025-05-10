@@ -1,0 +1,182 @@
+image: node:18.12-slim
+
+variables:
+  REPOSITORY_URI: $AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-1.amazonaws.com
+
+stages:
+  - test
+  - build
+  - deploy
+
+cache:
+  key: npm
+  policy: pull-push
+  paths:
+    - .npm/
+
+build-api:
+  stage: test
+  variables:
+    container: docker # Watch: https://github.com/GoogleContainerTools/kaniko/issues/1542#issuecomment-853929795
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - /kaniko/executor --context $CI_PROJECT_DIR/api --dockerfile $CI_PROJECT_DIR/api/Dockerfile --no-push
+  except:
+    - develop
+
+lint-api:
+  stage: test
+  image: golang:1.21
+  script:
+    - cd api
+    - make lint
+
+test-api:
+  stage: test
+  services:
+    - mysql:8.0.28
+  image: golang:1.21
+  variables:
+    MYSQL_ROOT_PASSWORD: password
+    MYSQL_DATABASE: test
+    MYSQL_USER: template-test
+    MYSQL_PASSWORD: password
+    MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    DB_USER: root
+    DB_PASSWORD: password
+    DB_HOST: mysql
+    DB_PORT: 3306
+    DB_NAME: test
+    TZ: Asia/Tokyo
+  before_script:
+    - cd api
+    - apt-get update && apt-get install -y curl
+    - curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.1/migrate.linux-amd64.tar.gz | tar xvz
+    - mv migrate /usr/local/bin/migrate
+    - migrate -path mysql/migrations -database "mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE}" up
+  script:
+    - make test-gitlab
+  coverage: '/total:\s*\(statements\)\s*\d+.\d+%/'
+
+build-cdk:
+  stage: test
+  script:
+    - cd cdk
+    - npm ci --cache .npm --prefer-offline
+    - npm run build
+
+lint-cdk:
+  stage: test
+  script:
+    - cd cdk
+    - npm ci --cache .npm --prefer-offline
+    - npm run lint
+    - npm run format
+
+test-cdk:
+  stage: test
+  before_script:
+    - cd cdk
+    - npm i -g esbuild
+    - npm install
+  script:
+    - npm ci --cache .npm --prefer-offline
+    - npm run test:ci
+  coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
+
+deploy-ecr-stg:
+  stage: build
+  image: docker:latest
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    APP_REPO_NAME: e-privado-stg-repo
+  services:
+    - docker:19-dind
+  before_script:
+    - apk add --no-cache curl jq python3 py3-pip
+    - apk add --no-cache aws-cli
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region $AWS_DEFAULT_REGION
+    - aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin $REPOSITORY_URI
+    - aws --version
+    - docker --version
+  script:
+    - echo Pushing Docker image to ECR...
+    - docker build ./api -t $REPOSITORY_URI/$APP_REPO_NAME:$CI_COMMIT_SHORT_SHA --build-arg ENTRYPOINT=./run
+    - docker push $REPOSITORY_URI/$APP_REPO_NAME:$CI_COMMIT_SHORT_SHA
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+deploy-stack-stg:
+  stage: deploy
+  image: node:18.12-slim
+  variables:
+    APP_REPO_NAME: e-privado-stg-repo
+  before_script:
+    - apt-get update
+    - apt-get install -y curl jq python3 python3-pip
+    - pip3 install awscli
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region $AWS_DEFAULT_REGION
+    - aws --version
+  script:
+    - cd cdk
+    - npm i
+    - npm run build
+    - npx aws-cdk --version
+    - npx aws-cdk synth -c tag=$CI_COMMIT_SHORT_SHA -c stage=stg
+    - npx aws-cdk deploy --all -c tag=$CI_COMMIT_SHORT_SHA -c stage=stg
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+
+deploy-ecr-prod:
+  stage: build
+  image: docker:latest
+  only:
+    - tags
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    APP_REPO_NAME: e-privado-prod-repo
+  services:
+    - docker:19-dind
+  before_script:
+    - apk add --no-cache curl jq python3 py3-pip
+    - apk add --no-cache aws-cli
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region $AWS_DEFAULT_REGION
+    - aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin $REPOSITORY_URI
+    - aws --version
+    - docker --version
+  script:
+    - echo Pushing Docker image to ECR...
+    - docker build ./api -t $REPOSITORY_URI/$APP_REPO_NAME:$CI_COMMIT_SHORT_SHA --build-arg ENTRYPOINT=./run
+    - docker push $REPOSITORY_URI/$APP_REPO_NAME:$CI_COMMIT_SHORT_SHA
+
+deploy-stack-prod:
+  stage: deploy
+  image: node:18.12-slim
+  only:
+    - tags
+  before_script:
+    - apt-get update
+    - apt-get install -y curl jq python3 python3-pip
+    - pip3 install awscli
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region $AWS_DEFAULT_REGION
+    - aws --version
+  script:
+    - cd cdk
+    - npm i
+    - npm run build
+    - npx aws-cdk --version
+    - npx aws-cdk synth -c tag=$CI_COMMIT_SHORT_SHA -c stage=prod
+    - npx aws-cdk deploy --all -c tag=$CI_COMMIT_SHORT_SHA -c stage=prod

@@ -1,0 +1,51 @@
+components:
+  requestBodies:
+    File:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fileName:
+                type: string
+                description: "ファイル名"
+                example: "example.jpg"
+              contentType:
+                type: string
+                description: "ファイルタイプ"
+                example: "image/jpeg"
+              fileSize:
+                type: integer
+                description: "ファイルサイズ"
+                example: 123456
+  schemas:
+    CreateFile:
+      type: object
+      properties:
+        fileId:
+          type: string
+          description: "ファイルID兼S3キー"
+          example: "01HF324CK1FKBMJFC6ATB4VCFE"
+        fileName:
+          type: string
+          description: "ファイル名"
+          example: "example.jpg"
+        fileType:
+          type: string
+          description: "ファイルタイプ"
+          example: "image/jpeg"
+        fileSize:
+          type: integer
+          description: "ファイルサイズ"
+          example: 123456
+    File:
+      type: object
+      properties:
+        fileId:
+          type: string
+          description: "ファイルID兼S3キー"
+          example: "01HF324CK1FKBMJFC6ATB4VCFE"
+        url:
+          type: string
+          description: "ファイルURL"
+          example: "https://s3.example.com/example.jpg"

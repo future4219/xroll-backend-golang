@@ -1,0 +1,475 @@
+index:
+  get:
+    tags:
+      - "Questionnaire"
+    summary: "アンケート一覧取得"
+    description: |
+     管理者権限以外の場合は、計算期間内のアンケートのみ取得します。
+    parameters:
+      - name: title
+        in: query
+        required: false
+        description: "アンケート名"
+        schema:
+          type: string
+      - name: start-at-from
+        in: query
+        required: false
+        description: "掲載開始日時"
+        schema:
+          type: string
+          format: date-time
+      - name: end-at-to
+        in: query
+        required: false
+        description: "掲載開始日時"
+        schema:
+          type: string
+          format: date-time
+      - name: status
+        in: query
+        required: false
+        description: "ステータス"
+        schema:
+          type: array
+          items:
+            type: string
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Questionnaire'
+  post:
+    tags:
+      - "Questionnaire"
+    summary: "アンケート情報登録"
+    description: |
+      アンケート情報を新規登録します
+      questionId, choiceIdは不要。
+    requestBody:
+      $ref: '#/components/requestBodies/Questionnaire'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Questionnaire'
+
+questionnaireId:
+  get:
+    tags:
+      - "Questionnaire"
+    summary: "アンケート詳細取得"
+    description: "アンケート詳細を取得します。"
+    parameters:
+      - name: questionnaireId
+        in: path
+        required: true
+        description: "アンケートID"
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Questionnaire'
+  put:
+    tags:
+      - "Questionnaire"
+    summary: "アンケート詳細更新"
+    description: "アンケート詳細を更新します。"
+    parameters:
+      - name: questionnaireId
+        in: path
+        required: true
+        description: "アンケートID"
+        schema:
+          type: integer
+    requestBody:
+      $ref: '#/components/requestBodies/Questionnaire'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Questionnaire'
+  delete:
+    tags:
+      - "Questionnaire"
+    summary: "アンケート削除"
+    description: "指定されたIDのアンケート情報を削除します。管理者のみ実行可能"
+    parameters:
+      - name: questionnaireId
+        in: path
+        required: true
+        description: "アンケートID"
+        schema:
+          type: integer
+    responses:
+      '204':
+        description: "成功（コンテンツなし）"
+      '404':
+        description: "失敗（パッケージが見つからない）"
+      '400':
+        description: "失敗（無効なリクエスト）"
+
+questionnaireAnswer:
+  post:
+    tags:
+      - "Questionnaire"
+    summary: "アンケートの回答を送信"
+    description: |
+      - アンケート結果の送信
+      - Questionのtypeがtextの場合、choiceIdsは不要, textは必須
+      - Questionのtypeがtext以外の場合、choiceIdsは必須, textは不要
+    parameters:
+      - name: questionnaireId
+        in: path
+        required: true
+        description: "アンケートID"
+        schema:
+          type: integer
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - answer
+              - memberId
+            properties:
+              answers:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - questionId
+                  properties:
+                    questionId:
+                      type: integer
+                      example: 1
+                      description: "質問ID"
+                    choiceIds:
+                      nullable: true
+                      type: array
+                      example: [1, 2, 3]
+                      description: "選択肢ID"
+                    text:
+                      nullable: true
+                      type: string
+                      example: "テキスト"
+                      description: "テキスト"
+
+              memberId:
+                type: integer
+                example: 1
+                description: "会員ID"
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionnaireAnswer'
+questionnaireAnswerUser:
+  get:
+    tags:
+      - "Questionnaire"
+    summary: "アンケートのユーザーごとの回答を取得"
+    description: "アンケートのユーザーごとの回答を取得"
+    parameters:
+      - name: questionnaireId
+        in: path
+        required: true
+        description: "アンケートID"
+        schema:
+          type: integer
+      - name: memberId
+        in: path
+        required: false
+        description: "会員ID"
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionnaireAnswer'
+
+questionnaireAnswerSummary:
+  get:
+    tags:
+      - "Questionnaire"
+    summary: "アンケート結果のサマリーを返す"
+    description: "回答結果を集計し、集計結果を返します。管理者のみ実行可能"
+    parameters:
+      - name: questionnaireId
+        in: path
+        required: true
+        description: "アンケートID"
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/QuestionnaireAnswerSummary'
+
+components:
+  requestBodies:
+    Questionnaire:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - title
+              - visibility
+              - startAt
+              - endAt
+              - description
+            properties:
+              startAt:
+                type: string
+                format: date-time
+                example: "2023-08-22T05:01:00Z"
+                description: "開始日時"
+              endAt:
+                type: string
+                format: date-time
+                example: "2099-12-31T14:59:00Z"
+                description: "終了日時"
+              visibility:
+                type: string
+                example: "everyone"
+                description: "公開範囲"
+              title:
+                type: string
+                example: "てすとてすとてすと"
+                description: "タイトル"
+              description:
+                type: string
+                example: "<p>テストのアンケート</p>"
+                description: "概要"
+              tags:
+                $ref: './tag.yml#/components/schemas/CreateTag'
+              questions:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - title
+                    - description
+                    - type
+                    - sortNumber
+                    - choices
+                  properties:
+                    title:
+                      $ref: '#/components/schemas/QuestionnaireQuestion/properties/title'
+                    description:
+                      $ref: '#/components/schemas/QuestionnaireQuestion/properties/description'
+                    type:
+                      $ref: '#/components/schemas/QuestionnaireQuestion/properties/type'
+                    sortNumber:
+                      $ref: '#/components/schemas/QuestionnaireQuestion/properties/sortNumber'
+                    choices:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                          - value
+                          - sortNumber
+                        properties:
+                          value:
+                            $ref: '#/components/schemas/QuestionnaireQuestionChoice/properties/value'
+                          sortNumber:
+                            $ref: '#/components/schemas/QuestionnaireQuestionChoice/properties/sortNumber'
+
+                description: "質問"
+  schemas:
+    Questionnaire:
+      type: object
+      properties:
+        questionnaireId:
+          type: integer
+          example: 11538
+          description: "アンケートID"
+        startAt:
+          type: string
+          format: date-time
+          example: "2023-08-22T05:01:00Z"
+          description: "開始日時"
+        endAt:
+          type: string
+          format: date-time
+          example: "2099-12-31T14:59:00Z"
+          description: "終了日時"
+        title:
+          type: string
+          example: "てすとてすとてすと"
+          description: "タイトル"
+        description:
+          type: string
+          example: "<p>テストのアンケート</p>"
+          description: "概要"
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionnaireQuestion'
+          description: "質問"
+        tags:
+          type: array
+          items:
+            $ref: './tag.yml#/components/schemas/Tag'
+    QuestionnaireQuestion:
+      type: object
+      properties:
+        questionId:
+          type: integer
+          example: 1
+          description: "質問ID"
+        title:
+          type: string
+          example: "質問"
+          description: "質問内容"
+        description:
+          type: string
+          example: "説明"
+          description: "説明"
+        type:
+          type: string
+          example: "radio"
+          description: "質問タイプ"
+          enum:
+            - "radio"
+            - "checkbox"
+            - "text"
+            - "pulldown"
+        sortNumber:
+          type: integer
+          example: 1
+          description: "並び順"
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionnaireQuestionChoice'
+          description: "選択肢"
+    QuestionnaireQuestionChoice:
+      type: object
+      properties:
+        choiceId:
+          type: integer
+          example: 1
+          description: "選択肢ID"
+        value:
+          type: string
+          example: "1"
+          description: "選択肢の値"
+        sortNumber:
+          type: integer
+          example: 1
+          description: "並び順"
+    QuestionnaireAnswer:
+      type: object
+      properties:
+        questionnaireAnswerId:
+          type: integer
+          example: 1
+          description: "回答ID"
+        questions:
+          type: array
+          items:
+            type: object
+            properties:
+              questionId:
+                $ref: '#/components/schemas/QuestionnaireQuestion/properties/questionId'
+              title:
+                $ref: '#/components/schemas/QuestionnaireQuestion/properties/title'
+              type:
+                $ref: '#/components/schemas/QuestionnaireQuestion/properties/type'
+              sortNumber:
+                $ref: '#/components/schemas/QuestionnaireQuestion/properties/sortNumber'
+              choices:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuestionnaireQuestionChoice'
+              answer:
+                type: object
+                properties:
+                  choiceIds:
+                    nullable: true
+                    type: array
+                    example: [1, 2, 3]
+                    description: "選択肢ID"
+                  text:
+                    nullable: true
+                    type: string
+                    example: "テキスト"
+                    description: "テキスト"
+        memberId:
+          type: integer
+          example: 1
+          description: "会員ID"
+    QuestionnaireAnswerSummary:
+      type: object
+      properties:
+        questionnaireAnswerId:
+          type: integer
+          example: 1
+          description: "回答ID"
+        questions:
+          type: array
+          items:
+            type: object
+            properties:
+              questionId:
+                $ref: '#/components/schemas/QuestionnaireQuestion/properties/questionId'
+              title:
+                $ref: '#/components/schemas/QuestionnaireQuestion/properties/title'
+              type:
+                $ref: '#/components/schemas/QuestionnaireQuestion/properties/type'
+              sortNumber:
+                $ref: '#/components/schemas/QuestionnaireQuestion/properties/sortNumber'
+              choices:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuestionnaireQuestionChoice'
+              answer:
+                type: object
+                properties:
+                  choiceIds:
+                    nullable: true
+                    type: array
+                    example: [1, 2, 3]
+                    description: "選択肢ID"
+                  text:
+                    nullable: true
+                    type: string
+                    example: "テキスト"
+                    description: "テキスト"
+        memberId:
+          type: integer
+          example: 1
+          description: "会員ID"

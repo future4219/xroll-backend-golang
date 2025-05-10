@@ -1,0 +1,33 @@
+index:
+  get:
+    tags:
+      - "Master"
+      - "Member"
+    summary: "職種一覧取得"
+    description: "職種一覧を取得します。"
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Occupation'
+
+components:
+  schemas:
+    Occupation:
+      type: object
+      properties:
+        occupationId:
+          type: string
+          example: "0000004JFGWDD8WH1R65R7NZ9A"
+          description: "職業ID"
+        name:
+          type: string
+          example: "臨床工学技士"
+          description: "職業名"

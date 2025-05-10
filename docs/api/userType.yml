@@ -1,0 +1,37 @@
+index:
+  get:
+    tags:
+      - "Master"
+      - "Member"
+    summary: "権限一覧取得"
+    description: "職種一覧を取得します。"
+    parameters:
+      - name: clientId
+        in: query
+        required: false
+        description: "クライアントID"
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/UserType'
+
+components:
+  schemas:
+    UserType:
+      type: string
+      description: "会員種別"
+      enum:
+        - "SystemAdmin"
+        - "DelegateUser"
+        - "MemberUser"
+        - "NonMemberUser"

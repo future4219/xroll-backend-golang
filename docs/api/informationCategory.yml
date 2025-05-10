@@ -1,0 +1,132 @@
+index:
+  get:
+    tags:
+      - "Master"
+      - "Information"
+      - "InformationCategory"
+    summary: "お知らせカテゴリ一覧"
+    description: "お知らせカテゴリの一覧を取得します。"
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/InformationCategory'
+  post:
+    tags:
+      - "Master"
+      - "InformationCategory"
+    summary: "お知らせカテゴリ登録"
+    description: |
+      - お知らせのカテゴリが登録可能。
+      - 管理者のみ実行可能。
+    requestBody:
+      $ref: '#/components/requestBodies/InformationCategory'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InformationCategory'
+
+informationCategoryId:
+  get:
+    tags:
+      - "InformationCategory"
+      - "Master"
+    summary: "お知らせのカテゴリ情報を一件のみ取得する"
+    description: |
+      - お知らせカテゴリを一件のみ取得する
+      - 管理者のみ実行可能
+    parameters:
+      - name: archiveCategoryId
+        in: path
+        required: true
+        description: "お知らせカテゴリID"
+        schema:
+          type: string
+  put:
+    tags:
+      - "Master"
+      - "InformationCategory"
+    summary: "お知らせカテゴリ更新"
+    description: |
+      - お知らせのカテゴリが更新可能。
+      - 管理者のみ実行可能。
+    parameters:
+      - name: informationCategoryId
+        in: path
+        required: true
+        description: "お知らせカテゴリID"
+        schema:
+          type: string
+    requestBody:
+      $ref: '#/components/requestBodies/InformationCategory'
+    responses:
+      '200':
+        description: "成功"
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InformationCategory'
+  delete:
+    tags:
+      - "Master"
+      - "InformationCategory"
+    summary: "お知らせカテゴリ削除"
+    description: | 
+      - 指定されたIDのお知らせカテゴリ情報を削除します。
+      - 管理者のみ実行可能
+    parameters:
+      - name: informationCategoryId
+        in: path
+        required: true
+        description: "お知らせカテゴリID"
+        schema:
+          type: string
+    responses:
+      '204':
+        description: "成功"
+      '404':
+        description: "失敗"
+      '400':
+        description: "失敗"
+
+components:
+  requestBodies:
+    InformationCategory:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - name
+            properties:
+              name:
+                type: string
+                example: "キャンペーン"
+                description: "お知らせカテゴリ名"
+  schemas:
+    InformationCategory:
+      type: object
+      properties:
+        InformationCategoryId:
+          type: string
+          example: "01HF316X9025DT824X2TZ846W7"
+          description: "お知らせカテゴリID"
+        name:
+          type: string
+          example: "お知らせ"
+          description: "カテゴリ名"
+        color:
+          type: string
+          example: "#FF0000"
+          description: "カテゴリの色"
