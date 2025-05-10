@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -102,7 +101,7 @@ func (h *VideoHandler) FindByID(c echo.Context) error {
 
 func (h *VideoHandler) FindByIDs(c echo.Context) error {
 	logger, _ := log.NewLogger()
-	
+
 	idsParam := c.QueryParam("ids")
 	idList := strings.Split(idsParam, ",")
 

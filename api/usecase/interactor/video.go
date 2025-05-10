@@ -1,7 +1,6 @@
 package interactor
 
 import (
-	"fmt"
 	"time"
 
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entity"
