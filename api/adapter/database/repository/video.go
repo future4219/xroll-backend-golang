@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"fmt"
+
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/database/model"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entity"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/usecase/output_port"
@@ -107,6 +109,7 @@ func (r *VideoRepository) FindByID(id string) (video entity.Video, err error) {
 		First(&videoModel).Error; err != nil {
 		return entity.Video{}, err
 	}
+	video = videoModel.Entity()
 	return video, nil
 }
 
@@ -129,7 +132,7 @@ func (r *VideoRepository) FindByIDs(ids []string) (videos []entity.Video, err er
 
 func (r *VideoRepository) Update(video entity.Video) (err error) {
 	defer output_port.WrapDatabaseError(&err)
-
+	fmt.Printf("video: %+v\n", video)
 	m := &model.Video{
 		ID:            video.ID,
 		Ranking:       video.Ranking,
