@@ -12,21 +12,25 @@ func User() []*model.User {
 			ID:    "system-admin",
 			Name: 	"システム管理者",
 			Age: 0,
+			UserType: "admin",
 		},
 		{
 			ID:    "admin",
 			Name: 	"管理者",
 			Age: 0,
+			UserType: "admin",
 		},
 		{
 			ID:    "user",
 			Name: 	"ユーザ",
 			Age: 0,
+			UserType: "user",
 		},
 		{
 			ID:    "user",
 			Name: 	"ユーザ",
 			Age: 0,
+			UserType: "user",
 		},
 	}
 }

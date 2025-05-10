@@ -24,3 +24,25 @@ func (u User) Entity() entity.User {
 		Age:  u.Age,
 	}
 }
+
+func (v Video) Entity() entity.Video {
+	return entity.Video{
+		ID:          v.ID,
+		Ranking: 	v.Ranking,
+		ThumbnailURL: v.ThumbnailURL,
+		VideoURL:    v.VideoURL,
+		DownloadCount: v.DownloadCount,
+		LikeCount:   v.LikeCount,
+		Comments:     ToEntities(v.Comments),
+		CreatedAt:   v.CreatedAt,
+	}
+}
+
+func (c VideoComment) Entity() entity.Comment {
+	return entity.Comment{
+		ID:        c.ID,
+		Comment:   c.Comment,
+		LikeCount: c.LikeCount,
+		CreatedAt: c.CreatedAt,
+	}
+}

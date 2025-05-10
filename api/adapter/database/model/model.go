@@ -12,14 +12,15 @@ type User struct {
 }
 
 type Video struct {
-	ID            string    `gorm:"primaryKey;type:varchar(255)"`
-	Ranking       int       `gorm:"not null"`
-	VideoURL      string    `gorm:"type:varchar(768);unique"` // ← 追加要件対応済み
-	ThumbnailURL  string    `gorm:"type:text;not null"`
-	TweetURL      *string   `gorm:"type:text"` // NULL許容
-	DownloadCount int       `gorm:"default:0"`
-	LikeCount     int       `gorm:"default:0"`
-	CreatedAt     time.Time `gorm:"autoCreateTime"`
+	ID            string         `gorm:"primaryKey;type:varchar(255)"`
+	Ranking       int            `gorm:"not null"`
+	VideoURL      string         `gorm:"type:varchar(768);unique"` // ← 追加要件対応済み
+	ThumbnailURL  string         `gorm:"type:text;not null"`
+	TweetURL      *string        `gorm:"type:text"` // NULL許容
+	DownloadCount int            `gorm:"default:0"`
+	LikeCount     int            `gorm:"default:0"`
+	CreatedAt     time.Time      `gorm:"autoCreateTime"`
+	Comments      []VideoComment `gorm:"foreignKey:VideoID"` 
 }
 
 type VideoComment struct {

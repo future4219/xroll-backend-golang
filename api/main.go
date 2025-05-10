@@ -84,10 +84,13 @@ func main() {
 		clockDriver, mailDriver, ulidDriver, transaction, userAuth, userRepo))
 
 	fileUC := interactor.NewAuthorizationFileUseCase(interactor.NewFileUseCase(ulidDriver, fileDriver))
+	videoRepo := repository.NewVideoRepository(db, ulidDriver)
+	videoUC := interactor.NewVideoUseCase(ulidDriver, videoRepo, clockDriver)
 
 	s := router.NewServer(
 		userUC,
 		fileUC,
+		videoUC,
 		true,
 	)
 

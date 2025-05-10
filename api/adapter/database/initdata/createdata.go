@@ -30,9 +30,10 @@ func CreateUser(db *gorm.DB) error {
 func CreateFirstUser(db *gorm.DB) error {
 	users := []*model.User{
 		{
-			ID:        "system-admin",
-			Name: 	"システム管理者",
-			Age: 0,
+			ID:       "system-admin",
+			Name:     "システム管理者",
+			Age:      0,
+			UserType: "admin",
 		},
 	}
 	return db.Save(users).Error

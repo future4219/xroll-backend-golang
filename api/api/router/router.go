@@ -15,6 +15,7 @@ import (
 func NewServer(
 	userUC input_port.IUserUseCase,
 	fileUC input_port.IFileUseCase,
+	videoUC input_port.IVideoUseCase,
 	isLogging bool,
 ) *echo.Echo {
 	e := echo.New()
@@ -33,6 +34,7 @@ func NewServer(
 	authHandler := handler.NewAuthHandler(userUC)
 	userHandler := handler.NewUserHandler(userUC)
 	fileHandler := handler.NewFileHandler(fileUC)
+	videoHandler := handler.NewVideoHandler(videoUC)
 
 	e.GET("/health", func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
@@ -45,6 +47,7 @@ func NewServer(
 	// auth
 	// 認可の例
 	auth := api.Group("", apiMiddleware.NewAuthMiddleware(userUC).Authenticate)
+	notAuth := api.Group("")
 	// user
 	user := auth.Group("/users")
 	user.GET("", userHandler.Search)
@@ -59,5 +62,13 @@ func NewServer(
 	file.POST("/upload/video", fileHandler.IssuePreSignedURLForPutVideo)
 	file.GET("/video/:fileId/:fileName", fileHandler.IssuePresignedURLForGetVideo)
 
+	// video
+	video := notAuth.Group("/videos")
+	video.GET("/search", videoHandler.Search)
+	video.POST("/create-bulk", videoHandler.CreateBulk)
+	video.GET("/multiple", videoHandler.FindByIDs)
+	video.GET("/:videoId", videoHandler.FindByID)
+	video.POST("/like/:videoId", videoHandler.Like)
+	video.POST("/comment/:videoId", videoHandler.Comment)
 	return e
 }

@@ -8,5 +8,11 @@ type VideoSearch struct {
 }
 
 type IVideoUseCase interface {
-	Search(search VideoSearch) (entity.Video, error)
+	Search(search VideoSearch) ([]entity.Video, error)
+	Create(video entity.Video) (entity.Video, error)
+	CreateBulk(videos []entity.Video) error
+	FindByID(id string) (entity.Video, error)
+	FindByIDs(ids []string) ([]entity.Video, error)
+	Like(videoID string) error
+	Comment(videoID string, comment string) (error)
 }
