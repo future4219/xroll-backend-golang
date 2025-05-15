@@ -94,7 +94,7 @@ func main() {
 		true,
 	)
 
-	if err := s.Start(":80"); err != nil {
+	if err := s.Start(":8000"); err != nil {
 		logger.Error("Failed to start server", zap.Error(err))
 		os.Exit(1)
 	}
