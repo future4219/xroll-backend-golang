@@ -31,6 +31,7 @@ func (r *VideoRepository) Search(search output_port.VideoSearch) (videos []entit
 		Limit(search.Limit).
 		Offset(search.Offset).
 		Where("created_at BETWEEN ? AND ?", search.Start, search.End).
+		Order(fmt.Sprintf("%s %s", search.OrderBy.ToString(), search.Order.ToString())).
 		Find(&videosModel).Error; err != nil {
 		return nil, err
 	}

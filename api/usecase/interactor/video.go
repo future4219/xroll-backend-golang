@@ -30,8 +30,10 @@ func (u *VideoUseCase) Search(search input_port.VideoSearch) (videos []entity.Vi
 			Limit:  search.Limit,
 			Offset: search.Offset,
 			// 現在から３日前まで
-			Start: now.Add(-3 * 24 * time.Hour),
-			End:   now,
+			Start:   now.Add(-3 * 24 * time.Hour),
+			End:     now,
+			OrderBy: output_port.VideoSearchOrderByRanking,
+			Order:   output_port.VideoSearchOrderAsc,
 		},
 	)
 	if err != nil {

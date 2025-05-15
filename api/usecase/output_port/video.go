@@ -16,9 +16,47 @@ type VideoRepository interface {
 	CreateComment(videoID string, comment entity.Comment) error
 }
 
+type VideoSearchOrderBy string
+
+const (
+	VideoSearchOrderByRanking   VideoSearchOrderBy = "ranking"
+	VideoSearchOrderByCreatedAt VideoSearchOrderBy = "created_at"
+)
+
+func (videoSearchOrderBy VideoSearchOrderBy) ToString() string {
+	switch videoSearchOrderBy {
+	case VideoSearchOrderByRanking:
+		return "ranking"
+	case VideoSearchOrderByCreatedAt:
+		return "created_at"
+	default:
+		return "created_at"
+	}
+}
+
+type VideoSearchOrder string
+
+const (
+	VideoSearchOrderAsc  VideoSearchOrder = "asc"
+	VideoSearchOrderDesc VideoSearchOrder = "desc"
+)
+
+func (videoSearchOrder VideoSearchOrder) ToString() string {
+	switch videoSearchOrder {
+	case VideoSearchOrderAsc:
+		return "asc"
+	case VideoSearchOrderDesc:
+		return "desc"
+	default:
+		return "asc"
+	}
+}
+
 type VideoSearch struct {
-	Limit  int
-	Offset int
-	Start  time.Time
-	End    time.Time
+	Limit   int
+	Offset  int
+	Start   time.Time
+	End     time.Time
+	OrderBy VideoSearchOrderBy
+	Order   VideoSearchOrder
 }
