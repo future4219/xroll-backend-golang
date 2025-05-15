@@ -1,11 +1,13 @@
 APP_NAME=xroll-backend
 PORT=8000
 
-# Docker build
+.PHONY: build run logs stop clean-cache build-clean deep-clean
+
+# 通常のDockerビルド
 build:
 	docker build -t $(APP_NAME) .
 
-# Docker run
+# Dockerコンテナ起動
 run:
 	docker stop $(APP_NAME) || true
 	docker rm $(APP_NAME) || true
@@ -15,18 +17,23 @@ run:
 		-p $(PORT):$(PORT) \
 		$(APP_NAME)
 
-# Docker logs
+# ログ表示
 logs:
 	docker logs -f $(APP_NAME)
 
-# Docker stop & remove
+# 停止＆削除
 stop:
 	docker stop $(APP_NAME) || true
 	docker rm $(APP_NAME) || true
 
-# 🔥 Docker build cache cleanup
+# Dockerビルドキャッシュだけ削除
 clean-cache:
 	docker builder prune -f
 
-# 🔄 Clean cache and then build
+# clean-cache + build
 build-clean: clean-cache build
+
+# 完全クリーン（未使用イメージ・ボリューム・ネットワーク・コンテナ）
+deep-clean:
+	docker system prune -a --volumes -f
+
