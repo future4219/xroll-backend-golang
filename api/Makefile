@@ -15,10 +15,18 @@ run:
 		-p $(PORT):$(PORT) \
 		$(APP_NAME)
 
+# Docker logs
 logs:
 	docker logs -f $(APP_NAME)
 
+# Docker stop & remove
 stop:
 	docker stop $(APP_NAME) || true
 	docker rm $(APP_NAME) || true
 
+# 🔥 Docker build cache cleanup
+clean-cache:
+	docker builder prune -f
+
+# 🔄 Clean cache and then build
+build-clean: clean-cache build
