@@ -7,6 +7,7 @@ import (
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/cache"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/database/repository"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/file"
+	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/twitter"
 
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/clock"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/email"
@@ -87,10 +88,15 @@ func main() {
 	videoRepo := repository.NewVideoRepository(db, ulidDriver)
 	videoUC := interactor.NewVideoUseCase(ulidDriver, videoRepo, clockDriver)
 
+
+	twitter := twitter.NewTwitter()
+	twitterUC := interactor.NewTwitterUseCase(twitter)
+	
 	s := router.NewServer(
 		userUC,
 		fileUC,
 		videoUC,
+		twitterUC,
 		true,
 	)
 

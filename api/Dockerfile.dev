@@ -1,4 +1,4 @@
-FROM --platform=linux/x86_64 golang:1.21-alpine
+FROM --platform=linux/x86_64 golang:1.23-alpine
 
 WORKDIR /app
 COPY ./go.mod ./go.sum ./Makefile ./

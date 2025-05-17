@@ -16,6 +16,7 @@ func NewServer(
 	userUC input_port.IUserUseCase,
 	fileUC input_port.IFileUseCase,
 	videoUC input_port.IVideoUseCase,
+	twitterUC input_port.ITwitterUseCase,
 	isLogging bool,
 ) *echo.Echo {
 	e := echo.New()
@@ -35,6 +36,7 @@ func NewServer(
 	userHandler := handler.NewUserHandler(userUC)
 	fileHandler := handler.NewFileHandler(fileUC)
 	videoHandler := handler.NewVideoHandler(videoUC)
+	twitterHandler := handler.NewTwitterHandler(twitterUC)
 
 	e.GET("/health", func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
@@ -70,5 +72,9 @@ func NewServer(
 	video.GET("/:videoId", videoHandler.FindByID)
 	video.POST("/like/:videoId", videoHandler.Like)
 	video.POST("/comment/:videoId", videoHandler.Comment)
+
+	// twitter
+	twitter := notAuth.Group("/twitter")
+	twitter.GET("/get-video-url", twitterHandler.GetVideoByURL)
 	return e
 }
