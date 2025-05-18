@@ -10,7 +10,7 @@ type Video struct {
 	TweetURL      *string
 	DownloadCount int
 	LikeCount     int
-	Comments       []Comment
+	Comments      []Comment
 	CreatedAt     time.Time
 }
 

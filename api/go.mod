@@ -22,6 +22,7 @@ require (
 require (
 	github.com/PuerkitoBio/goquery v1.10.3 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
+	github.com/klauspost/compress v1.18.0 // indirect
 )
 
 require (

@@ -90,7 +90,7 @@ func main() {
 
 
 	twitter := twitter.NewTwitter()
-	twitterUC := interactor.NewTwitterUseCase(twitter)
+	twitterUC := interactor.NewTwitterUseCase(twitter, videoRepo, ulidDriver)
 	
 	s := router.NewServer(
 		userUC,

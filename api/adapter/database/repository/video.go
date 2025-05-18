@@ -133,7 +133,6 @@ func (r *VideoRepository) FindByIDs(ids []string) (videos []entity.Video, err er
 
 func (r *VideoRepository) Update(video entity.Video) (err error) {
 	defer output_port.WrapDatabaseError(&err)
-	fmt.Printf("video: %+v\n", video)
 	m := &model.Video{
 		ID:            video.ID,
 		Ranking:       video.Ranking,
