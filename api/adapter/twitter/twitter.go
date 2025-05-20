@@ -1,14 +1,14 @@
 package twitter
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"os"
+	"regexp"
 	"time"
 
-	"io/ioutil"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -24,45 +24,40 @@ func NewTwitter() output_port.Twitter {
 
 // GetVideoURL は tweet の URL から Twidropper を使って動画URLを抽出する
 func (t *Twitter) GetVideoByURL(tweetURL string) (string, error) {
-	endpoint := os.Getenv("TWIDROPPER_ENDPOINT")
-	if endpoint == "" {
-		return "", fmt.Errorf("TWIDROPPER_ENDPOINT が設定されていません")
-	}
+	form := url.Values{}
+	form.Set("test", tweetURL)
 
-	data := url.Values{}
-	data.Set("url", tweetURL)
-	data.Set("submitBtn", "submit")
-
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-
-	resp, err := client.PostForm(endpoint, data)
+	req, err := http.NewRequest("POST", "https://awakest.net/twitter-video-downloader/", bytes.NewBufferString(form.Encode()))
 	if err != nil {
-		return "", fmt.Errorf("POST失敗: %w", err)
+		return "", err
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("User-Agent", "Mozilla/5.0")
+	req.Header.Set("Referer", "https://awakest.net/twitter-video-downloader/")
+	req.Header.Set("Origin", "https://awakest.net")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("HTTPステータスエラー: %d", resp.StatusCode)
-	}
-
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("レスポンス読み込み失敗: %w", err)
+		return "", err
 	}
 
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(bodyBytes)))
-	if err != nil {
-		return "", fmt.Errorf("HTML解析失敗: %w", err)
-	}
+	// .mp4のURLを探す
+	re := regexp.MustCompile(`https://video\.twimg\.com/[^"'<>\\\s]+\.mp4`)
+	matches := re.FindAllString(string(body), -1)
 
-	videoSrc, exists := doc.Find("video").Attr("src")
-	if !exists {
+	if len(matches) == 0 {
 		return "", fmt.Errorf("%w: twitter video", interactor.ErrKind.NotFound)
 	}
 
-	return videoSrc, nil
+	return matches[0], nil
 }
 
 func (t *Twitter) GetThumbnailByURL(tweetURL string) (string, error) {
