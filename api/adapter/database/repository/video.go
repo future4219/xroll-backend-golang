@@ -59,7 +59,7 @@ func (r *VideoRepository) Create(video entity.Video) (err error) {
 	if err = r.db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "video_url"}}, // UNIQUE指定カラム
 		DoUpdates: clause.AssignmentColumns([]string{
-			"ranking", "thumbnail_url", "tweet_url", "download_count", "like_count", "created_at",
+			"ranking", "created_at",
 		}),
 	}).Create(m).Error; err != nil {
 		return err
@@ -92,7 +92,7 @@ func (r *VideoRepository) CreateBulk(videos []entity.Video) (err error) {
 	if err = r.db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "video_url"}}, // ← これ必須！
 		DoUpdates: clause.AssignmentColumns([]string{
-			"ranking", "thumbnail_url", "tweet_url", "download_count", "like_count", "created_at",
+			"ranking", "created_at",
 		}),
 	}).CreateInBatches(m, 100).Error; err != nil {
 		return err
