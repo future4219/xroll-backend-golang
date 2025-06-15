@@ -33,7 +33,7 @@ func (u *TwitterUseCase) GetVideoByURL(url string) (string, error) {
 	}
 	create := entity.Video{
 		ID:            u.ulid.GenerateID(),
-		Ranking:       ,
+		Ranking:       9999,
 		VideoURL:      videoUrl,
 		ThumbnailURL:  thumbnailUrl,
 		DownloadCount: 0,
