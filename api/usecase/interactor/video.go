@@ -23,7 +23,7 @@ func NewVideoUseCase(ulid output_port.ULID, videoRepo output_port.VideoRepositor
 }
 
 func (u *VideoUseCase) Search(search input_port.VideoSearch) (videos []entity.Video, err error) {
-	now := time.Now()
+	now := u.clock.Now()
 
 	videos, err = u.videoRepo.Search(
 		output_port.VideoSearch{
