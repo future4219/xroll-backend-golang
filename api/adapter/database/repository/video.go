@@ -106,6 +106,7 @@ func (r *VideoRepository) FindByID(id string) (video entity.Video, err error) {
 
 	var videoModel model.Video
 	if err = r.db.Model(&model.Video{}).
+		Preload("Comments").
 		Where("id = ?", id).
 		First(&videoModel).Error; err != nil {
 		return entity.Video{}, err
@@ -119,6 +120,7 @@ func (r *VideoRepository) FindByIDs(ids []string) (videos []entity.Video, err er
 
 	var videosModel []model.Video
 	if err = r.db.Model(&model.Video{}).
+		Preload("Comments").
 		Where("id IN ?", ids).
 		Find(&videosModel).Error; err != nil {
 		return nil, err

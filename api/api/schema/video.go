@@ -14,7 +14,7 @@ type VideoRes struct {
 	TweetURL      string       `json:"tweet_url"`
 	DownloadCount int          `json:"download_count"`
 	LikeCount     int          `json:"like_count"`
-	Comments       []CommentRes `json:"comments"`
+	Comments      []CommentRes `json:"comments"`
 	CreatedAt     time.Time    `json:"created_at"`
 }
 
@@ -40,11 +40,12 @@ type VideoCreateBulkReq struct {
 }
 
 type VideoCreateReq struct {
-	ID            string `json:"id"`
-	Ranking       int    `json:"ranking"`
-	VideoURL      string `json:"video_url"`
-	ThumbnailURL  string `json:"thumbnail_url"`
-	DownloadCount int    `json:"download_count"`
+	ID            string  `json:"id"`
+	Ranking       int     `json:"ranking"`
+	VideoURL      string  `json:"video_url"`
+	ThumbnailURL  string  `json:"thumbnail_url"`
+	DownloadCount int     `json:"download_count"`
+	TweetURL      *string `json:"tweet_url"`
 }
 
 type VideoCommentReq struct {
@@ -60,6 +61,7 @@ func (vcq *VideoCreateBulkReq) ToEntity() ([]entity.Video, error) {
 			VideoURL:      video.VideoURL,
 			ThumbnailURL:  video.ThumbnailURL,
 			DownloadCount: video.DownloadCount,
+			TweetURL:      video.TweetURL,
 		}
 	}
 	return videos, nil
@@ -97,7 +99,7 @@ func VideoResFromEntity(video entity.Video) VideoRes {
 		}(),
 		DownloadCount: video.DownloadCount,
 		LikeCount:     video.LikeCount,
-		Comments:       CommentsResFromEntity(video.Comments),
+		Comments:      CommentsResFromEntity(video.Comments),
 		CreatedAt:     video.CreatedAt,
 	}
 }
