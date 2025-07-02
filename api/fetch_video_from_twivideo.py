@@ -126,13 +126,13 @@ def fetch_video_list():
         video_data["download_count"] = download_count
 
         # Twitter投稿ページのURL（tweet_urlとして格納）
-        # tw_icon_div = item.find("div", class_="tw_icon")
-        # tweet_url = None
-        # if tw_icon_div:
-        #     a_tag = tw_icon_div.find("a", href=True, rel="noopener noreferrer")
-        #     if a_tag and "x.com" in a_tag["href"]:
-        #         tweet_url = a_tag["href"]
-        # video_data["tweet_url"] = tweet_url
+        tw_icon_div = item.find("div", class_="tw_icon")
+        tweet_url = None
+        if tw_icon_div:
+            a_tag = tw_icon_div.find("a", href=True, rel="noopener noreferrer")
+            if a_tag and "x.com" in a_tag["href"]:
+                tweet_url = a_tag["href"]
+        video_data["tweet_url"] = tweet_url
 
         videos.append(video_data)
 
