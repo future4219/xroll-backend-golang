@@ -20,7 +20,7 @@ type Video struct {
 	DownloadCount int            `gorm:"default:0"`
 	LikeCount     int            `gorm:"default:0"`
 	CreatedAt     time.Time      `gorm:"autoCreateTime"`
-	Comments      []VideoComment `gorm:"foreignKey:VideoID"` 
+	Comments      []VideoComment `gorm:"foreignKey:VideoID"`
 }
 
 type VideoComment struct {
@@ -29,4 +29,21 @@ type VideoComment struct {
 	Comment   string    `gorm:"type:text;not null"`
 	LikeCount int       `gorm:"default:0"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
+}
+
+type Thread struct {
+	ID        string          `gorm:"primaryKey;type:varchar(255)"` // スレッドID
+	Title     string          `gorm:"type:varchar(255);not null"`   // スレッドタイトル
+	LikeCount int             `gorm:"default:0"`                    // いいね数
+	Comments  []ThreadComment `gorm:"foreignKey:ThreadID"`          // スレッドに紐づくコメント
+	CreatedAt time.Time       `gorm:"autoCreateTime"`               // 作成日時
+}
+
+type ThreadComment struct {
+	ID         string    `gorm:"primaryKey;type:varchar(255)"` // コメントID
+	ThreadID   string    `gorm:"type:varchar(255);not null;foreignKey:ThreadID"`
+	ThreaderID string    `gorm:"type:varchar(8);not null"` // コメントしたユーザーのID
+	Comment    string    `gorm:"type:text;not null"`       // コメント内容
+	LikeCount  int       `gorm:"default:0"`                // いいね数
+	CreatedAt  time.Time `gorm:"autoCreateTime"`           // 作成日時
 }

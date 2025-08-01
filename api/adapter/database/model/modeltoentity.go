@@ -47,3 +47,24 @@ func (c VideoComment) Entity() entity.Comment {
 		CreatedAt: c.CreatedAt,
 	}
 }
+
+func (t Thread) Entity() entity.Thread {
+	return entity.Thread{
+		ID:        t.ID,
+		Title:     t.Title,
+		LikeCount: t.LikeCount,
+		Comments:  ToEntities(t.Comments),
+		CreatedAt: t.CreatedAt,
+	}
+}
+
+func (c ThreadComment) Entity() entity.ThreadComment {
+	return entity.ThreadComment{
+		ID:         c.ID,
+		ThreadID:   c.ThreadID,
+		ThreaderID: c.ThreaderID,
+		Comment:    c.Comment,
+		LikeCount:  c.LikeCount,
+		CreatedAt:  c.CreatedAt,
+	}
+}
