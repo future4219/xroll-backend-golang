@@ -37,6 +37,7 @@ func NewServer(
 	fileHandler := handler.NewFileHandler(fileUC)
 	videoHandler := handler.NewVideoHandler(videoUC)
 	twitterHandler := handler.NewTwitterHandler(twitterUC)
+	gofileHandler := handler.NewGofileHandler()
 
 	e.GET("/health", func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
@@ -76,5 +77,9 @@ func NewServer(
 	// twitter
 	twitter := notAuth.Group("/twitter")
 	twitter.GET("/get-video-url", twitterHandler.GetVideoByURL)
+
+	//gofile
+	gofile := notAuth.Group("/gofile")
+	gofile.GET("/proxy", gofileHandler.ProxyGofileVideo)
 	return e
 }
