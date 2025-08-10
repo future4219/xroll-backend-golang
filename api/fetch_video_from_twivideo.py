@@ -155,7 +155,7 @@ def fetch_video_list():
         videos_json = json.load(json_file)
         
     # videos_jsonをAPIにPOST
-    url = "http://localhost:8000/api/videos/create-bulk"
+    url = "https://xroll.net/api/videos/create-bulk"
     
     headers = {"Content-Type": "application/json"}
     response = requests.post(url, headers=headers, json=videos_json)
