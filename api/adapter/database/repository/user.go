@@ -30,9 +30,11 @@ func (r *UserRepository) create(tx *gorm.DB, user entity.User) (err error) {
 	defer output_port.WrapDatabaseError(&err)
 
 	m := &model.User{
-		ID:   user.ID,
-		Name: user.Name,
-		Age:  user.Age,
+		ID:          user.ID,
+		Name:        user.Name,
+		Age:         user.Age,
+		UserType:    user.UserType,
+		GofileToken: user.GofileToken,
 	}
 	if err = tx.Create(m).Error; err != nil {
 		return err
@@ -89,12 +91,7 @@ func (r *UserRepository) FindByID(ID string) (user entity.User, err error) {
 
 	res := model.User{}
 	err = r.db.Model(&model.User{}).
-		Preload("Member.Occupations").
-		Preload("Member.ExternalOrganization").
-		Preload("Member.Prefecture").
-		Preload("Member.OfficePrefecture").
-		Where("is_deleted = false").
-		Where("user_id = ?", ID).
+		Where("id = ?", ID).
 		First(&res).
 		Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {

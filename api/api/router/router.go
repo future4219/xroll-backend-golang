@@ -17,6 +17,7 @@ func NewServer(
 	fileUC input_port.IFileUseCase,
 	videoUC input_port.IVideoUseCase,
 	twitterUC input_port.ITwitterUseCase,
+	gofileUC input_port.IGofileUseCase,
 	isLogging bool,
 ) *echo.Echo {
 	e := echo.New()
@@ -37,7 +38,7 @@ func NewServer(
 	fileHandler := handler.NewFileHandler(fileUC)
 	videoHandler := handler.NewVideoHandler(videoUC)
 	twitterHandler := handler.NewTwitterHandler(twitterUC)
-	gofileHandler := handler.NewGofileHandler()
+	gofileHandler := handler.NewGofileHandler(gofileUC)
 
 	e.GET("/health", func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
@@ -81,5 +82,7 @@ func NewServer(
 	//gofile
 	gofile := notAuth.Group("/gofile")
 	gofile.GET("/proxy", gofileHandler.ProxyGofileVideo)
+	gofile.POST("/create", gofileHandler.Create)
+	gofile.GET("/:userId", gofileHandler.FindByUserID)
 	return e
 }

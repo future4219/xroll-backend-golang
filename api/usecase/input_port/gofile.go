@@ -1,5 +1,17 @@
 package input_port
 
-type IGofileUseCase interface {
+import "gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entity"
 
+type IGofileUseCase interface {
+	Create(gofile GofileCreate) (entity.GofileVideo, error)
+	FindByUserID(userID string) ([]entity.GofileVideo, error)
+}
+
+type GofileCreate struct {
+	Name     string
+	GofileID string
+	TagIDs   []string
+	// User情報
+	UserID      *string
+	GofileToken string
 }

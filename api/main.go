@@ -7,6 +7,7 @@ import (
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/cache"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/database/repository"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/file"
+	gofileAPI "gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/gofile"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/twitter"
 
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/clock"
@@ -88,15 +89,25 @@ func main() {
 	videoRepo := repository.NewVideoRepository(db, ulidDriver)
 	videoUC := interactor.NewVideoUseCase(ulidDriver, videoRepo, clockDriver)
 
-
 	twitter := twitter.NewTwitter()
 	twitterUC := interactor.NewTwitterUseCase(twitter, videoRepo, ulidDriver)
-	
+
+	gofileRepo := repository.NewGofileRepository(db, ulidDriver)
+	gofileAPIDriver := gofileAPI.NewGofileAPI()
+	gofileUC := interactor.NewGofileUseCase(
+		ulidDriver,
+		gofileRepo,
+		gofileAPIDriver,
+		userRepo,
+		clockDriver,
+	)
+
 	s := router.NewServer(
 		userUC,
 		fileUC,
 		videoUC,
 		twitterUC,
+		gofileUC,
 		true,
 	)
 

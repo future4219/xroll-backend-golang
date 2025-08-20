@@ -1,6 +1,9 @@
 package output_port
 
-type Gofile interface {
+import "gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entity"
 
-
+type GofileRepository interface {
+	Create(gofile entity.GofileVideo) error
+	FindByID(id string) (entity.GofileVideo, error)
+	FindByUserID(userID string) ([]entity.GofileVideo, error)
 }

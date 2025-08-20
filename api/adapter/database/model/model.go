@@ -35,9 +35,10 @@ type VideoComment struct {
 type GofileVideo struct {
 	ID                  string               `gorm:"primaryKey;type:varchar(255)"`
 	Name                string               `gorm:"type:varchar(255);not null"`
-	GofileID            string               `gorm:"type:varchar(255);not null"`                                                                                      // GofileのID
-	GofileDirectURL     string               `gorm:"type:text;not null"`                                                                                              // Gofileの直接ダウンロードURL
-	VideoURL            string               `gorm:"type:text;not null"`                                                                                              // 動画のURL
+	GofileID            string               `gorm:"type:varchar(255);not null"` // GofileのID
+	GofileDirectURL     string               `gorm:"type:text;not null"`         // Gofileの直接ダウンロードURL
+	VideoURL            string               `gorm:"type:text;not null"`
+	ThumbnailURL        string               `gorm:"type:text;not null"`                                                                                              // 動画のサムネイルURL
 	LikeCount           int                  `gorm:"default:0"`                                                                                                       // いいね数
 	GofileTags          []GofileTag          `gorm:"many2many:gofile_video_tags;foreignKey:ID;joinForeignKey:GofileVideoID;References:ID;joinReferences:GofileTagID"` // GofileTagとの多対多リレーション
 	GofileVideoComments []GofileVideoComment `gorm:"foreignKey:GofileVideoID"`                                                                                        // GofileVideoCommentとのリレーション
