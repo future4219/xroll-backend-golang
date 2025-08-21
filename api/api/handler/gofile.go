@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -54,6 +53,27 @@ func (g *GofileHandler) Create(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, schema.GofileCreateResFromEntity(res))
+}
+
+func (g *GofileHandler) FindByID(c echo.Context) error {
+	logger, _ := log.NewLogger()
+
+	var id string
+	if err := echo.PathParamsBinder(c).MustString("id", &id).BindError(); err != nil {
+		logger.Info("Failed to bind path param id", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	res, err := g.GofileUC.FindByID(id)
+	if err != nil {
+		logger.Error("Failed to find by id", zap.Error(err))
+		switch {
+		case errors.Is(err, interactor.ErrKind.NotFound):
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		default:
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+	return c.JSON(http.StatusOK, schema.GofileVideoResFromEntity(res))
 }
 
 func (g *GofileHandler) FindByUserID(c echo.Context) error {

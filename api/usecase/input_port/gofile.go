@@ -5,6 +5,7 @@ import "gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado
 type IGofileUseCase interface {
 	Create(gofile GofileCreate) (entity.GofileVideo, error)
 	FindByUserID(userID string) ([]entity.GofileVideo, error)
+	FindByID(id string) (entity.GofileVideo, error)
 }
 
 type GofileCreate struct {

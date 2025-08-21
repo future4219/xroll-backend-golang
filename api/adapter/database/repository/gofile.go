@@ -56,6 +56,8 @@ func (r *GofileRepository) FindByID(id string) (entity.GofileVideo, error) {
 	var m model.GofileVideo
 	if err := r.db.
 		Preload("GofileTags").
+		Preload("GofileVideoComments").
+		Preload("User").
 		First(&m, "id = ?", id).Error; err != nil {
 		return entity.GofileVideo{}, err
 	}
@@ -65,15 +67,31 @@ func (r *GofileRepository) FindByID(id string) (entity.GofileVideo, error) {
 		tags = append(tags, entity.GofileTag{ID: tg.ID, Name: tg.Name})
 	}
 
+	gofileVideoComments := make([]entity.GofileVideoComment, 0, len(m.GofileVideoComments))
+	for _, comment := range m.GofileVideoComments {
+		gofileVideoComments = append(gofileVideoComments, entity.GofileVideoComment{
+			ID:        comment.ID,
+			Comment:   comment.Comment,
+			LikeCount: comment.LikeCount,
+			CreatedAt: comment.CreatedAt,
+			UpdatedAt: comment.UpdatedAt,
+		})
+	}
+
 	return entity.GofileVideo{
-		ID:              m.ID,
-		Name:            m.Name,
-		GofileID:        m.GofileID,
-		GofileDirectURL: m.GofileDirectURL,
-		VideoURL:        m.VideoURL,
-		ThumbnailURL:    m.ThumbnailURL,
-		UserID:          m.UserID,
-		GofileTags:      tags,
+		ID:                  m.ID,
+		Name:                m.Name,
+		GofileID:            m.GofileID,
+		GofileDirectURL:     m.GofileDirectURL,
+		VideoURL:            m.VideoURL,
+		ThumbnailURL:        m.ThumbnailURL,
+		LikeCount:           m.LikeCount,
+		GofileTags:          tags,
+		GofileVideoComments: gofileVideoComments,
+		UserID:              m.UserID,
+		User:                m.User.Entity(),
+		CreatedAt:           m.CreatedAt,
+		UpdatedAt:           m.UpdatedAt,
 	}, nil
 }
 
@@ -89,7 +107,7 @@ func (r *GofileRepository) FindByUserID(userID string) ([]entity.GofileVideo, er
 
 	videos := make([]entity.GofileVideo, len(res))
 	for i, video := range res {
-		
+
 		tags := make([]entity.GofileTag, 0, len(video.GofileTags))
 		for _, tg := range video.GofileTags {
 			tags = append(tags, entity.GofileTag{ID: tg.ID, Name: tg.Name})

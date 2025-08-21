@@ -19,9 +19,11 @@ func ToEntities[Entity any, Model model[Entity]](models []Model) []Entity {
 
 func (u User) Entity() entity.User {
 	return entity.User{
-		ID:   u.ID,
-		Name: u.Name,
-		Age:  u.Age,
+		ID:          u.ID,
+		Name:        u.Name,
+		Age:         u.Age,
+		UserType:    u.UserType,
+		GofileToken: u.GofileToken,
 	}
 }
 

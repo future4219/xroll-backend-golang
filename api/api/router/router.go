@@ -83,6 +83,7 @@ func NewServer(
 	gofile := notAuth.Group("/gofile")
 	gofile.GET("/proxy", gofileHandler.ProxyGofileVideo)
 	gofile.POST("/create", gofileHandler.Create)
+	gofile.GET("/video/:id", gofileHandler.FindByID)
 	gofile.GET("/:userId", gofileHandler.FindByUserID)
 	return e
 }

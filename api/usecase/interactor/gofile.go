@@ -50,6 +50,7 @@ func (u *GofileUseCase) Create(gofileCreate input_port.GofileCreate) (entity.Gof
 	}
 
 	// 先にDireftlinkを発行させないといけない
+	fmt.Println("-------------------------------start issuing direct link-------------------------------")
 	IssueDirectLinkRes, err := u.gofileAPIDriver.IssueDirectLink(
 		gofileCreate.GofileID,
 		os.Getenv("GOFILE_API_KEY"),
@@ -58,10 +59,10 @@ func (u *GofileUseCase) Create(gofileCreate input_port.GofileCreate) (entity.Gof
 		return entity.GofileVideo{}, fmt.Errorf("issue direct link: %w", err)
 	}
 	fmt.Println("-------------------------------end issuing direct link-------------------------------")
+
 	fmt.Printf("-------------------------------")
 	fmt.Printf("Issued Direct Link: %+v\n", IssueDirectLinkRes)
 	fmt.Printf("-------------------------------")
-
 
 	fmt.Println("-------------------------------start getting content-------------------------------")
 	gofileGetContentRes, err := u.gofileAPIDriver.GetContent(
@@ -112,6 +113,20 @@ func (u *GofileUseCase) Create(gofileCreate input_port.GofileCreate) (entity.Gof
 
 	return res, nil
 }
+
+func (u *GofileUseCase) FindByID(id string) (entity.GofileVideo, error) {
+	if id == "" {
+		return entity.GofileVideo{}, fmt.Errorf("id is required")
+	}
+
+	video, err := u.gofileRepo.FindByID(id)
+	if err != nil {
+		return entity.GofileVideo{}, err
+	}
+
+	return video, nil
+}
+
 
 // userIDが持っているVideoを返す
 func (u *GofileUseCase) FindByUserID(userID string) ([]entity.GofileVideo, error) {
