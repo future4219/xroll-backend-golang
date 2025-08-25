@@ -6,6 +6,8 @@ type IGofileUseCase interface {
 	Create(gofile GofileCreate) (entity.GofileVideo, error)
 	FindByUserID(userID string) ([]entity.GofileVideo, error)
 	FindByID(id string) (entity.GofileVideo, error)
+	FindByUserIDShared(userID string) ([]entity.GofileVideo, error)
+	UpdateIsShareVideo(id string, isShare bool) error
 }
 
 type GofileCreate struct {

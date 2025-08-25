@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -97,6 +98,52 @@ func (g *GofileHandler) FindByUserID(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, schema.GofileVideoListFromEntity(res))
+}
+
+func (g *GofileHandler) FindByUserIDShared(c echo.Context) error {
+	logger, _ := log.NewLogger()
+	fmt.Println("fdasfdasfsadfdas")
+	var userID string
+	if err := echo.PathParamsBinder(c).MustString("userId", &userID).BindError(); err != nil {
+		logger.Info("Failed to bind path param id", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	res, err := g.GofileUC.FindByUserIDShared(userID)
+	if err != nil {
+		logger.Error("Failed to find non-shared by user id", zap.Error(err))
+		switch {
+		case errors.Is(err, interactor.ErrKind.NotFound):
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		default:
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.JSON(http.StatusOK, schema.GofileVideoListFromEntity(res))
+}
+
+func (g *GofileHandler) UpdateIsShareVideo(c echo.Context) error {
+	logger, _ := log.NewLogger()
+
+	var req schema.GofileUpdateIsShareReq
+	if err := c.Bind(&req); err != nil {
+		logger.Error("Failed to bind request", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	fmt.Printf("req: %+v\n", req)
+	err := g.GofileUC.UpdateIsShareVideo(req.VideoID, req.IsShared)
+	if err != nil {
+		logger.Error("Failed to update is share", zap.Error(err))
+		switch {
+		case errors.Is(err, interactor.ErrKind.NotFound):
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		default:
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.NoContent(http.StatusOK)
 }
 
 func (g *GofileHandler) ProxyGofileVideo(c echo.Context) error {

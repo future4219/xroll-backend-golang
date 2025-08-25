@@ -85,5 +85,7 @@ func NewServer(
 	gofile.POST("/create", gofileHandler.Create)
 	gofile.GET("/video/:id", gofileHandler.FindByID)
 	gofile.GET("/:userId", gofileHandler.FindByUserID)
+	gofile.GET("/:userId/shared", gofileHandler.FindByUserIDShared)
+	gofile.PATCH("/update-is-shared", gofileHandler.UpdateIsShareVideo)
 	return e
 }

@@ -10,6 +10,7 @@ type GofileVideo struct {
 	VideoURL            string               // 動画のURL
 	ThumbnailURL        string               // 動画のサムネイルURL
 	LikeCount           int                  // いいね数
+	IsShared            bool                 // 動画が共有されているかどうか
 	GofileTags          []GofileTag          // GofileTagとの多対多リレーション
 	GofileVideoComments []GofileVideoComment // GofileVideoCommentとのリレーション
 	UserID              string               // ユーザーID

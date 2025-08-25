@@ -97,6 +97,7 @@ func (u *GofileUseCase) Create(gofileCreate input_port.GofileCreate) (entity.Gof
 		GofileDirectURL: gofileDirectLink,
 		VideoURL:        videoURL,
 		ThumbnailURL:    gofileGetContentRes.Data.Thumbnail,
+		IsShared:        false, // 初期状態では共有されていない
 		UserID:          User.ID,
 		User:            User,
 		GofileTags:      gofileTags,
@@ -127,7 +128,6 @@ func (u *GofileUseCase) FindByID(id string) (entity.GofileVideo, error) {
 	return video, nil
 }
 
-
 // userIDが持っているVideoを返す
 func (u *GofileUseCase) FindByUserID(userID string) ([]entity.GofileVideo, error) {
 	if userID == "" {
@@ -140,4 +140,37 @@ func (u *GofileUseCase) FindByUserID(userID string) ([]entity.GofileVideo, error
 	}
 
 	return videos, nil
+}
+
+func (u *GofileUseCase) FindByUserIDShared(userID string) ([]entity.GofileVideo, error) {
+	if userID == "" {
+		return nil, fmt.Errorf("userID is required")
+	}
+
+	videos, err := u.gofileRepo.FindByUserIDShared(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return videos, nil
+}
+
+func (u *GofileUseCase) UpdateIsShareVideo(videoID string, isShare bool) error {
+	if videoID == "" {
+		return fmt.Errorf("videoID is required")
+	}
+
+	video, err := u.gofileRepo.FindByID(videoID)
+	if err != nil {
+		return err
+	}
+
+	video.IsShared = isShare
+	fmt.Printf("-------------------------------update video isShare: %v-------------------------------\n", isShare)
+	fmt.Printf("video: %+v\n", video)
+	if err := u.gofileRepo.Update(video); err != nil {
+		return err
+	}
+
+	return nil
 }

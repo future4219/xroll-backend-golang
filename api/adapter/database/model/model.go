@@ -40,6 +40,7 @@ type GofileVideo struct {
 	VideoURL            string               `gorm:"type:text;not null"`
 	ThumbnailURL        string               `gorm:"type:text;not null"`                                                                                              // 動画のサムネイルURL
 	LikeCount           int                  `gorm:"default:0"`                                                                                                       // いいね数
+	IsShared            bool                 `gorm:"default:false"`                                                                                                   // 動画が共有されているかどうか
 	GofileTags          []GofileTag          `gorm:"many2many:gofile_video_tags;foreignKey:ID;joinForeignKey:GofileVideoID;References:ID;joinReferences:GofileTagID"` // GofileTagとの多対多リレーション
 	GofileVideoComments []GofileVideoComment `gorm:"foreignKey:GofileVideoID"`                                                                                        // GofileVideoCommentとのリレーション
 	UserID              string               `gorm:"type:varchar(255);not null"`                                                                                      // ユーザーID

@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"fmt"
+
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/database/model"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entity"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/usecase/output_port"
@@ -36,6 +38,7 @@ func (r *GofileRepository) Create(gofile entity.GofileVideo) error {
 		GofileDirectURL: gofile.GofileDirectURL,
 		VideoURL:        gofile.VideoURL,
 		ThumbnailURL:    gofile.ThumbnailURL,
+		IsShared:        gofile.IsShared,
 		UserID:          gofile.UserID,
 		GofileTags:      gofileTagsModel,
 	}
@@ -43,6 +46,44 @@ func (r *GofileRepository) Create(gofile entity.GofileVideo) error {
 	if err := r.db.Create(&m).Error; err != nil {
 		return err
 	}
+	// 既存タグと関連づけ（join テーブル）
+	if len(gofileTagsModel) > 0 {
+		if err := r.db.Model(&m).Association("GofileTags").Replace(gofileTagsModel); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *GofileRepository) Update(gofile entity.GofileVideo) error {
+	var m model.GofileVideo
+
+	gofileTagsModel := make([]model.GofileTag, 0, len(gofile.GofileTags))
+	for _, tag := range gofile.GofileTags {
+		gofileTagsModel = append(gofileTagsModel, model.GofileTag{
+			ID:   tag.ID,
+			Name: tag.Name,
+		})
+	}
+	m = model.GofileVideo{
+		ID:              gofile.ID,
+		Name:            gofile.Name,
+		GofileID:        gofile.GofileID,
+		GofileDirectURL: gofile.GofileDirectURL,
+		VideoURL:        gofile.VideoURL,
+		ThumbnailURL:    gofile.ThumbnailURL,
+		LikeCount:       gofile.LikeCount,
+		IsShared:        gofile.IsShared,
+		UserID:          gofile.UserID,
+		GofileTags:      gofileTagsModel,
+		CreatedAt:       gofile.CreatedAt,
+		UpdatedAt:       gofile.UpdatedAt,
+	}
+	fmt.Printf("gofile: %+v\n", m);
+	if err := r.db.Save(&m).Error; err != nil {
+		return err
+	}
+
 	// 既存タグと関連づけ（join テーブル）
 	if len(gofileTagsModel) > 0 {
 		if err := r.db.Model(&m).Association("GofileTags").Replace(gofileTagsModel); err != nil {
@@ -86,6 +127,7 @@ func (r *GofileRepository) FindByID(id string) (entity.GofileVideo, error) {
 		VideoURL:            m.VideoURL,
 		ThumbnailURL:        m.ThumbnailURL,
 		LikeCount:           m.LikeCount,
+		IsShared:            m.IsShared,
 		GofileTags:          tags,
 		GofileVideoComments: gofileVideoComments,
 		UserID:              m.UserID,
@@ -98,6 +140,7 @@ func (r *GofileRepository) FindByID(id string) (entity.GofileVideo, error) {
 func (r *GofileRepository) FindByUserID(userID string) ([]entity.GofileVideo, error) {
 	var res []model.GofileVideo
 	if err := r.db.
+		Preload("User").
 		Preload("GofileTags").
 		Preload("GofileVideoComments").
 		Where("user_id = ?", userID).
@@ -131,6 +174,59 @@ func (r *GofileRepository) FindByUserID(userID string) ([]entity.GofileVideo, er
 			GofileDirectURL:     video.GofileDirectURL,
 			VideoURL:            video.VideoURL,
 			ThumbnailURL:        video.ThumbnailURL,
+			LikeCount:           video.LikeCount,
+			IsShared:            video.IsShared,
+			UserID:              video.UserID,
+			GofileTags:          tags,
+			GofileVideoComments: gofileVideoComments,
+			CreatedAt:           video.CreatedAt,
+			UpdatedAt:           video.UpdatedAt,
+		}
+	}
+
+	return videos, nil
+}
+
+func (r *GofileRepository) FindByUserIDShared(userId string) ([]entity.GofileVideo, error) {
+	var res []model.GofileVideo
+	fmt.Println("--------------------------")
+	if err := r.db.
+		Preload("User").
+		Preload("GofileTags").
+		Preload("GofileVideoComments").
+		Where("user_id = ? AND is_shared = ?", userId, true).
+		Find(&res).Error; err != nil {
+		return nil, err
+	}
+
+	videos := make([]entity.GofileVideo, len(res))
+	for i, video := range res {
+
+		tags := make([]entity.GofileTag, 0, len(video.GofileTags))
+		for _, tg := range video.GofileTags {
+			tags = append(tags, entity.GofileTag{ID: tg.ID, Name: tg.Name})
+		}
+
+		gofileVideoComments := make([]entity.GofileVideoComment, 0, len(video.GofileVideoComments))
+		for _, comment := range video.GofileVideoComments {
+			gofileVideoComments = append(gofileVideoComments, entity.GofileVideoComment{
+				ID:        comment.ID,
+				Comment:   comment.Comment,
+				LikeCount: comment.LikeCount,
+				CreatedAt: comment.CreatedAt,
+				UpdatedAt: comment.UpdatedAt,
+			})
+		}
+
+		videos[i] = entity.GofileVideo{
+			ID:                  video.ID,
+			Name:                video.Name,
+			GofileID:            video.GofileID,
+			GofileDirectURL:     video.GofileDirectURL,
+			VideoURL:            video.VideoURL,
+			ThumbnailURL:        video.ThumbnailURL,
+			LikeCount:           video.LikeCount,
+			IsShared:            video.IsShared,
 			UserID:              video.UserID,
 			GofileTags:          tags,
 			GofileVideoComments: gofileVideoComments,
