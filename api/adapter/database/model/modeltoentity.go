@@ -1,6 +1,7 @@
 package model
 
 import (
+	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entconst"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entity"
 )
 
@@ -22,7 +23,7 @@ func (u User) Entity() entity.User {
 		ID:          u.ID,
 		Name:        u.Name,
 		Age:         u.Age,
-		UserType:    u.UserType,
+		UserType:    entconst.UserType(u.UserType),
 		GofileToken: u.GofileToken,
 	}
 }

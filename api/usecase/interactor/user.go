@@ -82,10 +82,14 @@ func (u *UserUseCase) Create(userCreate input_port.UserCreate) (entity.User, err
 	userID := u.ulid.GenerateID()
 	user, err := constructor.NewUserCreate(
 		userID,
-		userCreate.StudentID,
-		userCreate.IdmUniv,
-		userCreate.IdmBus,
+		userCreate.Name,
+		userCreate.Age,
 		userCreate.UserType,
+		userCreate.Email,
+		userCreate.Password,
+		userCreate.GofileToken,
+		userCreate.EmailVerified,
+		userCreate.IsDeleted,
 	)
 	if err != nil {
 		return entity.User{}, fmt.Errorf("failed to construct user: %w", err)
@@ -164,4 +168,40 @@ func (u *UserUseCase) SendResetPasswordMail(emailAddress string) error {
 	}
 
 	return nil
+}
+
+func (u *UserUseCase) Boot(user entity.User) (_ entity.User, token string, err error) {
+	if user.ID == "" {
+		guestUser, err := constructor.NewUserCreate(
+			u.ulid.GenerateID(),
+			"ゲストユーザー",
+			1,
+			"GuestUser",
+			nil,
+			nil,
+			nil,
+			false,
+			false,
+		)
+		if err != nil {
+			return entity.User{}, "", fmt.Errorf("failed to construct guest user: %w", err)
+		}
+
+		if err := u.userRepo.Create(guestUser); err != nil {
+			return entity.User{}, "", fmt.Errorf("failed to create guest user: %w", err)
+		}
+
+		user, err := u.userRepo.FindByID(guestUser.ID)
+		if err != nil {
+			return entity.User{}, "", fmt.Errorf("failed to find guest user: %w", err)
+		}
+
+		token, err := u.userAuth.IssueUserToken(user, u.clock.Now())
+		if err != nil {
+			return entity.User{}, "", fmt.Errorf("failed to issue user token: %w", err)
+		}
+		return user, token, nil
+	}
+
+	return user, "", nil
 }

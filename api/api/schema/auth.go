@@ -2,13 +2,18 @@ package schema
 
 const TokenType = "Bearer"
 
+type BootRes struct {
+	AccessToken string `json:"accessToken"`
+	TokenType   string `json:"tokenType"`
+	UserID      string `json:"userId"`
+}
 type LoginReq struct {
 	LoginID  string `json:"loginId"`
 	Password string `json:"password"`
 }
 
 type LoginResUser struct {
-	ID  string `json:"Id"`
+	ID      string `json:"Id"`
 	LoginID string `json:"loginId"`
 }
 

@@ -5,15 +5,18 @@ import (
 )
 
 type UserCreate struct {
-	ID    string
-	StudentID string
-	IdmUniv   string
-	IdmBus    string
-	UserType  string
+	Name          string
+	Age           int
+	UserType      string
+	Email         *string
+	Password      *string
+	GofileToken   *string
+	EmailVerified bool
+	IsDeleted     bool
 }
 
 type UserUpdate struct {
-	ID    string
+	ID        string
 	StudentID string
 	IdmUniv   string
 	IdmBus    string
@@ -26,6 +29,7 @@ type UserUpdatePassword struct {
 }
 
 type IUserUseCase interface {
+	Boot(entity.User) (entity.User, string, error)
 	Authenticate(token string) (string, error)
 	AuthenticateForUpdateEmail(token string) (string, error)
 	AuthenticateForUpdatePassword(token string) (string, error)

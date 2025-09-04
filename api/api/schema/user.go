@@ -17,9 +17,12 @@ type UsersRes struct {
 }
 
 type CreateUserReq struct {
-	StudentID string `json:"student_id"`
-	IdmUniv   string `json:"idm_univ"`
-	IdmBus    string `json:"idm_bus"`
+	Name     string `json:"name" validate:"required"`
+	Age      int    `json:"age" validate:"required,gte=0"`
+	UserType string `json:"userType" validate:"required,oneof=guest user admin"`
+	Email    *string `json:"email" validate:"required,email"`
+	Password *string `json:"password" validate:"required,min=8"`
+
 }
 
 type CreateUserReqByAdmin struct {

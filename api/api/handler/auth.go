@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 
+	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/api/middleware"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/api/schema"
 	log "gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/log"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/usecase/input_port"
@@ -23,7 +24,30 @@ func NewAuthHandler(userUC input_port.IUserUseCase) *AuthHandler {
 	return &AuthHandler{UserUC: userUC}
 }
 
-// Login POST /auth/access-token
+func (h *AuthHandler) Boot(c echo.Context) error {
+	logger, _ := log.NewLogger()
+
+	ctx := c.Request().Context()
+	user, _ := middleware.GetUserFromContext(ctx) // トークンからIDを取得
+
+	user, token, err := h.UserUC.Boot(user)
+	if err != nil {
+		logger.Info("Failed to boot", zap.Error(err))
+		switch {
+		case errors.Is(err, interactor.ErrKind.NotFound):
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		default:
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.JSON(http.StatusOK, &schema.BootRes{
+		AccessToken: token,
+		TokenType:   schema.TokenType,
+		UserID:      user.ID,
+	})
+}
+
 func (h *AuthHandler) Login(c echo.Context) error {
 	logger, _ := log.NewLogger()
 
@@ -47,7 +71,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	}
 
 	loginUser := &schema.LoginResUser{
-		ID:  user.ID,
+		ID: user.ID,
 	}
 
 	return c.JSON(http.StatusOK, &schema.LoginRes{

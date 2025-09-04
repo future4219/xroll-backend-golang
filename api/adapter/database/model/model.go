@@ -5,12 +5,33 @@ import (
 )
 
 type User struct {
-	ID          string `gorm:"primaryKey;type:varchar(255)"`
-	Name        string `gorm:"type:varchar(100)"`
-	Age         int    `gorm:"default:0"` // 年齢を保存するフィールド
-	UserType    string `gorm:"type:varchar(20)"`
-	GofileToken string `gorm:"type:varchar(255);unique"` // Gofileのトークンを保存するフィールド
+	ID             string    `gorm:"primaryKey;type:varchar(255)"`
+	Name           string    `gorm:"type:varchar(100)"`
+	Age            int       `gorm:"default:0"`
+	UserType       string    `gorm:"type:varchar(20);index"`        // "guest" | "member" | "admin"
+	Email          *string   `gorm:"type:varchar(255);uniqueIndex"` // ゲストはNULL
+	HashedPassword *string   `gorm:"type:varchar(255)"`             // ゲストはNULL
+	GofileToken    *string    `gorm:"type:varchar(255);unique"`
+	EmailVerified  bool      `gorm:"default:false"`
+	IsDeleted      bool      `gorm:"default:false"`
+	CreatedAt      time.Time `gorm:"autoCreateTime"`
+	UpdatedAt      time.Time `gorm:"autoUpdateTime"`
 }
+
+type RefreshToken struct {
+	ID         string     `gorm:"primaryKey;type:varchar(255)"`
+	UserID     string     `gorm:"index;type:varchar(255)"`
+	TokenHash  string     `gorm:"size:64;uniqueIndex"`
+	SessionID  string     `gorm:"size:64;index"`
+	UserAgent  string     `gorm:"size:255"`
+	IPAddress  string     `gorm:"size:45"`
+	CreatedAt  time.Time  `gorm:"autoCreateTime"`
+	ExpiresAt  time.Time  `gorm:"index"`
+	RevokedAt  *time.Time `gorm:"index"`
+	ReplacedBy *int64
+}
+
+func (RefreshToken) TableName() string { return "refresh_tokens" }
 
 type Video struct {
 	ID            string         `gorm:"primaryKey;type:varchar(255)"`

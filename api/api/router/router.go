@@ -51,7 +51,15 @@ func NewServer(
 	// auth
 	// 認可の例
 	auth := api.Group("", apiMiddleware.NewAuthMiddleware(userUC).Authenticate)
+	authIfPossible := api.Group("", apiMiddleware.NewAuthMiddleware(userUC).AuthenticateIfPossible)
 	notAuth := api.Group("")
+
+	// auth
+	authIfPossible.GET("/auth/boot", authHandler.Boot)
+	
+
+
+
 	// user
 	user := auth.Group("/users")
 	user.GET("", userHandler.Search)

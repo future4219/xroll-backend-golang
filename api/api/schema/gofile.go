@@ -25,11 +25,11 @@ type GofileVideoListRes struct {
 }
 
 type GofileCreateReq struct {
-	Name        string   `json:"name" validate:"required"`         // 動画の名前
-	GofileID    string   `json:"gofile_id" validate:"required"`    // GofileのID
-	TagIDs      []string `json:"tag_ids"`                          // タグのIDリスト
-	UserID      *string  `json:"user_id"`                          // ユーザーID
-	GofileToken string   `json:"gofile_token" validate:"required"` // Gofileのトークン
+	Name        string   `json:"name" validate:"required"`      // 動画の名前
+	GofileID    string   `json:"gofile_id" validate:"required"` // GofileのID
+	TagIDs      []string `json:"tag_ids"`                       // タグのIDリスト
+	UserID      *string  `json:"user_id"`                       // ユーザーID
+	GofileToken *string  `json:"gofile_token"`                  // Gofileのトークン
 }
 
 type GofileCreateRes struct {

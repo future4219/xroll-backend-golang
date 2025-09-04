@@ -28,23 +28,24 @@ func IssueUserToken(userID string, issuedAt time.Time, scopes []string) (string,
 	id := uuid.New()
 
 	// scopeによって有効期限を変更
-	var expiredAt time.Time
-	if contains(scopes, output_port.TokenScopeGeneral) {
-		expiredAt = issuedAt.Add(output_port.TokenGeneralExpireDuration)
-	} else if contains(scopes, output_port.TokenScopeUpdateEmail) {
-		expiredAt = issuedAt.Add(output_port.TokenEmailUpdateExpireDuration)
-	} else if contains(scopes, output_port.TokenScopeUpdatePassword) {
-		expiredAt = issuedAt.Add(output_port.TokenChangePasswordExpireDuration)
-	} else {
-		return "", output_port.ErrUnknownScope
-	}
+	// var expiredAt time.Time
+	// if contains(scopes, output_port.TokenScopeGeneral) {
+	// 	expiredAt = issuedAt.Add(output_port.TokenGeneralExpireDuration)
+	// } else if contains(scopes, output_port.TokenScopeUpdateEmail) {
+	// 	expiredAt = issuedAt.Add(output_port.TokenEmailUpdateExpireDuration)
+	// } else if contains(scopes, output_port.TokenScopeUpdatePassword) {
+	// 	expiredAt = issuedAt.Add(output_port.TokenChangePasswordExpireDuration)
+	// } else {
+	// 	return "", output_port.ErrUnknownScope
+	// }
 
 	claims := &userClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ID:        id.String(),
-			Subject:   userID,
-			IssuedAt:  jwt.NewNumericDate(issuedAt),
-			ExpiresAt: jwt.NewNumericDate(expiredAt),
+			ID:       id.String(),
+			Subject:  userID,
+			IssuedAt: jwt.NewNumericDate(issuedAt),
+			// ３０日に固定している
+			ExpiresAt: jwt.NewNumericDate(issuedAt.Add(30 * 24 * time.Hour)),
 		},
 		Scopes: scopes,
 	}

@@ -16,5 +16,5 @@ type GofileCreate struct {
 	TagIDs   []string
 	// User情報
 	UserID      *string
-	GofileToken string
+	GofileToken *string
 }

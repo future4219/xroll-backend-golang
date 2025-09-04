@@ -12,6 +12,9 @@ type AuthorizationUserUseCaseDecorator struct {
 func NewAuthorizationUserUseCase(inner input_port.IUserUseCase) input_port.IUserUseCase {
 	return &AuthorizationUserUseCaseDecorator{inner: inner}
 }
+func (a AuthorizationUserUseCaseDecorator) Boot(user entity.User) (entity.User, string, error) {
+	return a.inner.Boot(user)
+}
 
 func (a AuthorizationUserUseCaseDecorator) Authenticate(token string) (string, error) {
 	return a.inner.Authenticate(token)

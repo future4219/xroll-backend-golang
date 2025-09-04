@@ -33,7 +33,7 @@ func (r *UserRepository) create(tx *gorm.DB, user entity.User) (err error) {
 		ID:          user.ID,
 		Name:        user.Name,
 		Age:         user.Age,
-		UserType:    user.UserType,
+		UserType:    user.UserType.String(),
 		GofileToken: user.GofileToken,
 	}
 	if err = tx.Create(m).Error; err != nil {
