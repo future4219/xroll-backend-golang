@@ -13,5 +13,5 @@ func DSN() string {
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
 		os.Getenv("DB_NAME"),
-	) + "?charset=utf8mb4&collation=utf8mb4_bin&parseTime=True&loc=Asia%2FTokyo"
+	) + "?charset=	utf8mb4&collation=utf8mb4_bin&parseTime=True&loc=Asia%2FTokyo"
 }

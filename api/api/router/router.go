@@ -48,7 +48,7 @@ func NewServer(
 	api.POST("/auth/access-token", authHandler.Login)
 	api.POST("/auth/reset-password", authHandler.ResetPassword)
 	api.POST("/auth/create-by-me", authHandler.CreateByMe)
-	
+
 	// auth
 	// 認可の例
 	auth := api.Group("", apiMiddleware.NewAuthMiddleware(userUC).Authenticate)
@@ -90,12 +90,14 @@ func NewServer(
 
 	//gofile
 	gofile := auth.Group("/gofile")
-	gofileAuthCookieOrHeader := authCookieOrHeader.Group("/gofile")
-	gofileAuthCookieOrHeader.GET("/proxy", gofileHandler.ProxyGofileVideo)
 	gofile.POST("/create", gofileHandler.Create)
 	gofile.GET("/video/:id", gofileHandler.FindByID)
 	gofile.GET("/:userId", gofileHandler.FindByUserID)
 	gofile.GET("/:userId/shared", gofileHandler.FindByUserIDShared)
 	gofile.PATCH("/update-is-shared", gofileHandler.UpdateIsShareVideo)
+	gofile.DELETE("/delete/:id", gofileHandler.Delete)
+	gofileAuthCookieOrHeader := authCookieOrHeader.Group("/gofile")
+	gofileAuthCookieOrHeader.GET("/proxy", gofileHandler.ProxyGofileVideo)
+
 	return e
 }

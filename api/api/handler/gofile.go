@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -175,6 +176,36 @@ func (g *GofileHandler) UpdateIsShareVideo(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+func (g *GofileHandler) Delete(c echo.Context) error {
+	logger, _ := log.NewLogger()
+
+	ctx := c.Request().Context()
+	user, err := middleware.GetUserFromContext(ctx) // トークンからIDを取得
+	if err != nil {
+		logger.Error("Failed to get id from context", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	var id string
+	if err := echo.PathParamsBinder(c).MustString("id", &id).BindError(); err != nil {
+		logger.Info("Failed to bind path param id", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	fmt.Printf("id to delete: %s\n", id)
+
+	err = g.GofileUC.Delete(user, id)
+	if err != nil {
+		logger.Error("Failed to delete gofile video", zap.Error(err))
+		switch {
+		case errors.Is(err, interactor.ErrKind.NotFound):
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		default:
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+	return c.NoContent(http.StatusOK)
+}
+
 func (g *GofileHandler) ProxyGofileVideo(c echo.Context) error {
 	logger, _ := log.NewLogger()
 
@@ -184,7 +215,7 @@ func (g *GofileHandler) ProxyGofileVideo(c echo.Context) error {
 		logger.Error("Failed to get id from context", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	
+
 	gofileVideoId := c.QueryParam("id")
 	if gofileVideoId == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "IDが必要です (?id=...)")
@@ -205,7 +236,6 @@ func (g *GofileHandler) ProxyGofileVideo(c echo.Context) error {
 	if gofile.IsShared == false && gofile.UserID != user.ID {
 		return echo.NewHTTPError(http.StatusForbidden, "this video is not shared")
 	}
-
 
 	token := os.Getenv("GOFILE_API_KEY")
 	if token == "" {

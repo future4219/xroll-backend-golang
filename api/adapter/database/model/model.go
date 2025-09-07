@@ -60,6 +60,7 @@ type GofileVideo struct {
 	GofileVideoComments []GofileVideoComment `gorm:"foreignKey:GofileVideoID"`                                                                                        // GofileVideoCommentとのリレーション
 	UserID              string               `gorm:"type:varchar(255);not null"`                                                                                      // ユーザーID
 	User                User                 `gorm:"foreignKey:UserID;references:ID"`                                                                                 // ユーザーとのリレーション
+	IsDeleted           bool                 `gorm:"default:false"`                                                                                                   // 論理削除フラグ
 	CreatedAt           time.Time            `gorm:"autoCreateTime"`
 	UpdatedAt           time.Time            `gorm:"autoUpdateTime"` // 更新日時
 }

@@ -8,4 +8,5 @@ type GofileRepository interface {
 	FindByUserID(userID string) ([]entity.GofileVideo, error)
 	FindByUserIDShared(userID string) ([]entity.GofileVideo, error)
 	Update(gofile entity.GofileVideo) error
+	Delete(id string) error
 }

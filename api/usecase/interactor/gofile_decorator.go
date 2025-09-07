@@ -32,3 +32,7 @@ func (a AuthorizationGofileUseCaseDecorator) FindByUserIDShared(user entity.User
 func (a AuthorizationGofileUseCaseDecorator) UpdateIsShareVideo(user entity.User, id string, isShare bool) error {
 	return a.inner.UpdateIsShareVideo(user, id, isShare)
 }
+
+func (a AuthorizationGofileUseCaseDecorator) Delete(user entity.User, id string) error {
+	return a.inner.Delete(user, id)
+}

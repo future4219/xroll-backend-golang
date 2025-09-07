@@ -79,7 +79,7 @@ func (r *GofileRepository) Update(gofile entity.GofileVideo) error {
 		CreatedAt:       gofile.CreatedAt,
 		UpdatedAt:       gofile.UpdatedAt,
 	}
-	fmt.Printf("gofile: %+v\n", m);
+	fmt.Printf("gofile: %+v\n", m)
 	if err := r.db.Save(&m).Error; err != nil {
 		return err
 	}
@@ -236,4 +236,8 @@ func (r *GofileRepository) FindByUserIDShared(userId string) ([]entity.GofileVid
 	}
 
 	return videos, nil
+}
+
+func (r *GofileRepository) Delete(id string) error {
+	return r.db.Delete(&model.GofileVideo{}, "id = ?", id).Error
 }

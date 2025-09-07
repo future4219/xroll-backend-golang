@@ -172,3 +172,25 @@ func (u *GofileUseCase) UpdateIsShareVideo(user entity.User, videoID string, isS
 
 	return nil
 }
+
+func (u *GofileUseCase) Delete(user entity.User, videoID string) error {
+	if videoID == "" {
+		return fmt.Errorf("videoID is required")
+	}
+
+	video, err := u.gofileRepo.FindByID(videoID)
+	if err != nil {
+		return err
+	}
+
+	// 自分の動画のみ削除可能
+	if video.UserID != user.ID {
+		return fmt.Errorf("you do not have permission to delete this video")
+	}
+
+	if err := u.gofileRepo.Delete(videoID); err != nil {
+		return err
+	}
+
+	return nil
+}
