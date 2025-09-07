@@ -5,10 +5,9 @@ import (
 )
 
 type UserRes struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Age   int    `json:"age"`
-	
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Age  int    `json:"age"`
 }
 
 type UsersRes struct {
@@ -17,12 +16,11 @@ type UsersRes struct {
 }
 
 type CreateUserReq struct {
-	Name     string `json:"name" validate:"required"`
-	Age      int    `json:"age" validate:"required,gte=0"`
-	UserType string `json:"userType" validate:"required,oneof=guest user admin"`
+	Name     string  `json:"name" validate:"required"`
+	Age      int     `json:"age" validate:"required,gte=0"`
+	UserType string  `json:"userType" validate:"required,oneof=guest user admin"`
 	Email    *string `json:"email" validate:"required,email"`
 	Password *string `json:"password" validate:"required,min=8"`
-
 }
 
 type CreateUserReqByAdmin struct {
@@ -46,9 +44,10 @@ type UserSearchQueryReq struct {
 	Limit    int    `query:"limit"`
 }
 
+
 func UserResFromEntity(user entity.User) UserRes {
 	return UserRes{
-		ID:    user.ID,
+		ID: user.ID,
 	}
 }
 

@@ -4,26 +4,33 @@ import (
 	"errors"
 	"fmt"
 
+	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/authentication"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/email"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/constructor"
+	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entconst"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entity"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/usecase/input_port"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/usecase/output_port"
 )
 
 var (
-	ErrUserAlreadyExists = errors.New("user already exists")
-	ErrEmailNotChanged   = errors.New("email not changed")
-	ErrEmailAlreadyUsed  = errors.New("email already used")
+	ErrUserAlreadyExists            = errors.New("user already exists")
+	ErrEmailNotChanged              = errors.New("email not changed")
+	ErrEmailAlreadyUsed             = errors.New("email already used")
+	ErrAuthenticationCodeExpired    = errors.New("authentication code expired")
+	ErrAuthenticationCodeInvalid    = errors.New("authentication code invalid")
+	ErrRegisterVerificationNotFound = errors.New("register verification not found")
 )
 
 type UserUseCase struct {
-	clock       output_port.Clock
-	email       output_port.Email
-	ulid        output_port.ULID
-	transaction output_port.Transaction
-	userAuth    output_port.UserAuth
-	userRepo    output_port.UserRepository
+	clock                    output_port.Clock
+	email                    output_port.Email
+	ulid                     output_port.ULID
+	transaction              output_port.Transaction
+	userAuth                 output_port.UserAuth
+	userRepo                 output_port.UserRepository
+	authCode                 output_port.AuthCode
+	registerVerificationRepo output_port.RegisterVerificationRepository
 }
 
 func NewUserUseCase(
@@ -33,14 +40,19 @@ func NewUserUseCase(
 	transaction output_port.Transaction,
 	userAuth output_port.UserAuth,
 	userRepo output_port.UserRepository,
+	authCode output_port.AuthCode,
+	registerVerificationRepo output_port.RegisterVerificationRepository,
+
 ) input_port.IUserUseCase {
 	return &UserUseCase{
-		clock:       clock,
-		email:       email,
-		ulid:        ulid,
-		transaction: transaction,
-		userAuth:    userAuth,
-		userRepo:    userRepo,
+		clock:                    clock,
+		email:                    email,
+		ulid:                     ulid,
+		transaction:              transaction,
+		userAuth:                 userAuth,
+		userRepo:                 userRepo,
+		authCode:                 authCode,
+		registerVerificationRepo: registerVerificationRepo,
 	}
 }
 
@@ -204,4 +216,95 @@ func (u *UserUseCase) Boot(user entity.User) (_ entity.User, token string, err e
 	}
 
 	return user, "", nil
+}
+
+func (u *UserUseCase) CreateByMe(create input_port.CreateByMe) error {
+	_, err := u.userRepo.FindByEmail(create.Email)
+	if err == nil {
+		return errors.Join(ErrKind.Conflict, ErrEmailAlreadyUsed)
+	}
+	if !errors.Is(err, ErrKind.NotFound) {
+		return err
+	}
+
+	hashedPassword, err := u.userAuth.HashPassword(create.Password)
+	if err != nil {
+		return err
+	}
+
+	authenticationCode := u.authCode.Generate4DigitCode()
+
+	hashedAuthenticationCode, err := authentication.HashBcryptPassword(authenticationCode)
+	if err != nil {
+		return err
+	}
+
+	registerVerification, err := constructor.NewRegisterVerificationCreate(constructor.NewRegisterVerificationCreateArgs{
+		RegisterVerificationID:   u.ulid.GenerateID(),
+		Email:                    create.Email,
+		Password:                 create.Password,
+		HashedPassword:           hashedPassword,
+		HashedAuthenticationCode: hashedAuthenticationCode,
+		ExpiresAt:                u.clock.Now().Add(output_port.TokenRegisterExpireDuration),
+	})
+	if err != nil {
+		return err
+	}
+
+	return u.transaction.StartTransaction(func(tx interface{}) error {
+		if err = u.registerVerificationRepo.UpsertInTx(tx, registerVerification); err != nil {
+			return err
+		}
+
+		subject, body := email.ContentToRegister(authenticationCode)
+		return u.email.Send([]string{create.Email}, subject, body, "")
+	})
+}
+
+func (u UserUseCase) VerifyEmail(user entity.User, input input_port.VerifyEmail) (entity.User, string, error) {
+	registerVerification, err := u.registerVerificationRepo.FindByEmail(input.Email)
+	if err != nil {
+		return entity.User{}, "", errors.Join(ErrKind.NotFound, ErrRegisterVerificationNotFound)
+	}
+
+	now := u.clock.Now()
+	if registerVerification.ExpiresAt.Before(now) {
+		return entity.User{}, "", errors.Join(ErrKind.BadRequest, ErrAuthenticationCodeExpired)
+	}
+
+	err = u.userAuth.VerifyAuthenticationCode(registerVerification.HashedAuthenticationCode, input.AuthenticationCode)
+	if err != nil {
+		return entity.User{}, "", errors.Join(ErrKind.BadRequest, ErrAuthenticationCodeInvalid)
+	}
+
+	user.UserType = entconst.MemberUser
+	user.Email = &registerVerification.Email
+	user.HashedPassword = &registerVerification.HashedPassword
+	user.EmailVerified = true
+
+	if err := u.transaction.StartTransaction(func(tx interface{}) error {
+		if err := u.registerVerificationRepo.DeleteByEmailInTx(tx, registerVerification.Email); err != nil {
+			return err
+		}
+
+		if err := u.userRepo.UpdateWithTx(tx, user); err != nil {
+			return err
+		}
+
+		return nil
+	}); err != nil {
+		return entity.User{}, "", err
+	}
+
+	res, err := u.userRepo.FindByID(user.ID)
+	if err != nil {
+		return entity.User{}, "", err
+	}
+
+	token, err := u.userAuth.IssueUserToken(res, now)
+	if err != nil {
+		return entity.User{}, "", err
+	}
+
+	return res, token, nil
 }

@@ -79,11 +79,14 @@ func main() {
 	cacheDriver := cache.GetInstance()
 	fileDriver := file.NewFileDriver(awsCli, cacheDriver)
 	clockDriver := clock.New()
+	authCode := authentication.NewAuthenticationCode()
+
+	registerVerification := repository.NewRegisterVerificationRepository(db)
 
 	ulidDriver := ulid.NewULID()
 	userRepo := repository.NewUserRepository(db, ulidDriver)
 	userUC := interactor.NewAuthorizationUserUseCase(interactor.NewUserUseCase(
-		clockDriver, mailDriver, ulidDriver, transaction, userAuth, userRepo))
+		clockDriver, mailDriver, ulidDriver, transaction, userAuth, userRepo, authCode, registerVerification))
 
 	fileUC := interactor.NewAuthorizationFileUseCase(interactor.NewFileUseCase(ulidDriver, fileDriver))
 	videoRepo := repository.NewVideoRepository(db, ulidDriver)
@@ -94,13 +97,13 @@ func main() {
 
 	gofileRepo := repository.NewGofileRepository(db, ulidDriver)
 	gofileAPIDriver := gofileAPI.NewGofileAPI()
-	gofileUC := interactor.NewGofileUseCase(
+	gofileUC := interactor.NewAuthorizationGofileUseCase(interactor.NewGofileUseCase(
 		ulidDriver,
 		gofileRepo,
 		gofileAPIDriver,
 		userRepo,
 		clockDriver,
-	)
+	))
 
 	s := router.NewServer(
 		userUC,

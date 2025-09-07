@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	TokenRegisterExpireDuration       = time.Hour // 1 hour
 	TokenScopeGeneral                 = "general"
 	TokenGeneralExpireDuration        = 24 * time.Hour // 1 day
 	TokenScopeUpdateEmail             = "updateEmail"
@@ -31,6 +32,7 @@ type UserRepository interface {
 	ListByLoginIDs(loginIDs []string) ([]entity.User, error)
 	Search(Query string, userType string, Skip int, Limit int) ([]entity.User, int, error)
 	Update(entity.User) error
+	UpdateWithTx(tx interface{}, user entity.User) error
 	FindMaxLoginID() (string, error)
 	GetAdminUser() ([]entity.User, error)
 }
@@ -44,4 +46,5 @@ type UserAuth interface {
 	IssueUserTokenForUpdateEmail(user entity.User, issuedAt time.Time) (string, error)
 	IssueUserTokenForUpdatePassword(user entity.User, issuedAt time.Time) (string, error)
 	GenerateInitialPassword(length int) (string, error)
+	VerifyAuthenticationCode(hashedOtp, input string) error
 }

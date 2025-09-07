@@ -47,18 +47,19 @@ func NewServer(
 	api := e.Group("/api")
 	api.POST("/auth/access-token", authHandler.Login)
 	api.POST("/auth/reset-password", authHandler.ResetPassword)
-
+	api.POST("/auth/create-by-me", authHandler.CreateByMe)
+	
 	// auth
 	// 認可の例
 	auth := api.Group("", apiMiddleware.NewAuthMiddleware(userUC).Authenticate)
 	authIfPossible := api.Group("", apiMiddleware.NewAuthMiddleware(userUC).AuthenticateIfPossible)
+	authCookieOrHeader := api.Group("", apiMiddleware.NewAuthMiddleware(userUC).AuthenticateCookieOrHeader)
 	notAuth := api.Group("")
+
+	auth.POST("/auth/verify-email", authHandler.VerifyEmail)
 
 	// auth
 	authIfPossible.GET("/auth/boot", authHandler.Boot)
-	
-
-
 
 	// user
 	user := auth.Group("/users")
@@ -88,8 +89,9 @@ func NewServer(
 	twitter.GET("/get-video-url", twitterHandler.GetVideoByURL)
 
 	//gofile
-	gofile := notAuth.Group("/gofile")
-	gofile.GET("/proxy", gofileHandler.ProxyGofileVideo)
+	gofile := auth.Group("/gofile")
+	gofileAuthCookieOrHeader := authCookieOrHeader.Group("/gofile")
+	gofileAuthCookieOrHeader.GET("/proxy", gofileHandler.ProxyGofileVideo)
 	gofile.POST("/create", gofileHandler.Create)
 	gofile.GET("/video/:id", gofileHandler.FindByID)
 	gofile.GET("/:userId", gofileHandler.FindByUserID)

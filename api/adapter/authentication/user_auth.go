@@ -59,3 +59,8 @@ func (a *UserAuth) GenerateInitialPassword(length int) (string, error) {
 	}
 	return string(ret), nil
 }
+
+
+func (a *UserAuth) VerifyAuthenticationCode(hashedOtp, input string) error {
+	return CheckBcryptOtp(hashedOtp, input)
+}

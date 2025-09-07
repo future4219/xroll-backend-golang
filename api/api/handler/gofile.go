@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -11,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/labstack/echo/v4"
+	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/api/middleware"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/api/schema"
 	log "gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/log"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/usecase/input_port"
@@ -35,7 +35,15 @@ func (g *GofileHandler) Create(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	ctx := c.Request().Context()
+	user, err := middleware.GetUserFromContext(ctx) // トークンからIDを取得
+	if err != nil {
+		logger.Error("Failed to get id from context", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
 	res, err := g.GofileUC.Create(
+		user,
 		input_port.GofileCreate{
 			Name:        req.Name,
 			GofileID:    req.GofileID,
@@ -64,7 +72,15 @@ func (g *GofileHandler) FindByID(c echo.Context) error {
 		logger.Info("Failed to bind path param id", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	res, err := g.GofileUC.FindByID(id)
+
+	ctx := c.Request().Context()
+	user, err := middleware.GetUserFromContext(ctx) // トークンからIDを取得
+	if err != nil {
+		logger.Error("Failed to get id from context", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	res, err := g.GofileUC.FindByID(user, id)
 	if err != nil {
 		logger.Error("Failed to find by id", zap.Error(err))
 		switch {
@@ -80,13 +96,14 @@ func (g *GofileHandler) FindByID(c echo.Context) error {
 func (g *GofileHandler) FindByUserID(c echo.Context) error {
 	logger, _ := log.NewLogger()
 
-	var userID string
-	if err := echo.PathParamsBinder(c).MustString("userId", &userID).BindError(); err != nil {
-		logger.Info("Failed to bind path param id", zap.Error(err))
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	ctx := c.Request().Context()
+	user, err := middleware.GetUserFromContext(ctx) // トークンからIDを取得
+	if err != nil {
+		logger.Error("Failed to get id from context", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	res, err := g.GofileUC.FindByUserID(userID)
+	res, err := g.GofileUC.FindByUserID(user)
 	if err != nil {
 		logger.Error("Failed to find by user id", zap.Error(err))
 		switch {
@@ -102,14 +119,21 @@ func (g *GofileHandler) FindByUserID(c echo.Context) error {
 
 func (g *GofileHandler) FindByUserIDShared(c echo.Context) error {
 	logger, _ := log.NewLogger()
-	fmt.Println("fdasfdasfsadfdas")
-	var userID string
-	if err := echo.PathParamsBinder(c).MustString("userId", &userID).BindError(); err != nil {
+
+	var targetUserId string
+	if err := echo.PathParamsBinder(c).MustString("userId", &targetUserId).BindError(); err != nil {
 		logger.Info("Failed to bind path param id", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	res, err := g.GofileUC.FindByUserIDShared(userID)
+	ctx := c.Request().Context()
+	user, err := middleware.GetUserFromContext(ctx) // トークンからIDを取得
+	if err != nil {
+		logger.Error("Failed to get id from context", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	res, err := g.GofileUC.FindByUserIDShared(user, targetUserId)
 	if err != nil {
 		logger.Error("Failed to find non-shared by user id", zap.Error(err))
 		switch {
@@ -126,13 +150,20 @@ func (g *GofileHandler) FindByUserIDShared(c echo.Context) error {
 func (g *GofileHandler) UpdateIsShareVideo(c echo.Context) error {
 	logger, _ := log.NewLogger()
 
+	ctx := c.Request().Context()
+	user, err := middleware.GetUserFromContext(ctx) // トークンからIDを取得
+	if err != nil {
+		logger.Error("Failed to get id from context", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
 	var req schema.GofileUpdateIsShareReq
 	if err := c.Bind(&req); err != nil {
 		logger.Error("Failed to bind request", zap.Error(err))
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	fmt.Printf("req: %+v\n", req)
-	err := g.GofileUC.UpdateIsShareVideo(req.VideoID, req.IsShared)
+
+	err = g.GofileUC.UpdateIsShareVideo(user, req.VideoID, req.IsShared)
 	if err != nil {
 		logger.Error("Failed to update is share", zap.Error(err))
 		switch {

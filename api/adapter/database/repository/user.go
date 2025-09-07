@@ -59,7 +59,7 @@ func (r *UserRepository) Delete(ID string) (err error) {
 	defer output_port.WrapDatabaseError(&err)
 
 	return r.db.Model(&model.User{}).
-		Where("user_id = ?", ID).
+		Where("id = ?", ID).
 		Updates(
 			map[string]interface{}{
 				"email":           ID + "_deleted",
@@ -136,7 +136,7 @@ func (r *UserRepository) Search(query string, userType string, skip int, limit i
 	}
 
 	err = sqlQuery.
-		Group("users.user_id").
+		Group("users.id").
 		Count(&totalRes).
 		Offset(skip).
 		Limit(limit).
@@ -155,26 +155,40 @@ func (r *UserRepository) Search(query string, userType string, skip int, limit i
 }
 
 // Update TODO 更新の実装を修正する
-func (r *UserRepository) Update(user entity.User) (err error) {
+func (r *UserRepository) update(tx *gorm.DB, user entity.User) (err error) {
 	defer output_port.WrapDatabaseError(&err)
-	return r.db.Model(&model.User{}).
-		Where("user_id = ?", user.ID).
+	return tx.Model(&model.User{}).
+		Where("id = ?", user.ID).
 		Updates(
 			map[string]interface{}{
-				"id":   user.ID,
-				"name": user.Name,
-				"age":  user.Age,
+				"id":              user.ID,
+				"name":            user.Name,
+				"age":             user.Age,
+				"user_type":       user.UserType.String(),
+				"email":           user.Email,
+				"hashed_password": user.HashedPassword,
+				"gofile_token":    user.GofileToken,
+				"email_verified":  user.EmailVerified,
+				"is_deleted":      user.IsDeleted,
 			},
 		).Error
+}
+
+func (r *UserRepository) Update(user entity.User) error {
+	return r.update(r.db, user)
+}
+
+func (r *UserRepository) UpdateWithTx(tx interface{}, user entity.User) error {
+	txAsserted, ok := tx.(*gorm.DB)
+	if !ok {
+		return output_port.ErrInvalidTransaction
+	}
+	return r.update(txAsserted, user)
 }
 
 func (r *UserRepository) listByEmails(tx *gorm.DB, emails []string) ([]entity.User, error) {
 	var res []model.User
 	err := tx.Model(&model.User{}).
-		Preload("Member.Occupations").
-		Preload("Member.ExternalOrganization").
-		Preload("Member.Prefecture").
-		Preload("Member.OfficePrefecture").
 		Where("is_deleted = false").
 		Where("email IN ?", emails).
 		Find(&res).
@@ -194,10 +208,6 @@ func (r *UserRepository) listByEmails(tx *gorm.DB, emails []string) ([]entity.Us
 func (r *UserRepository) listByLoginIDs(tx *gorm.DB, loginIDs []string) ([]entity.User, error) {
 	var res []model.User
 	err := tx.Model(&model.User{}).
-		Preload("Member.Occupations").
-		Preload("Member.ExternalOrganization").
-		Preload("Member.Prefecture").
-		Preload("Member.OfficePrefecture").
 		Where("is_deleted = false").
 		Where("login_id IN ?", loginIDs).
 		Find(&res).

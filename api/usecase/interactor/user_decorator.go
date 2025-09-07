@@ -65,6 +65,13 @@ func (a AuthorizationUserUseCaseDecorator) SendResetPasswordMail(email string) e
 }
 
 func (a AuthorizationUserUseCaseDecorator) Update(myself entity.User, update input_port.UserUpdate) (entity.User, error) {
-
 	return a.inner.Update(myself, update)
+}
+
+func (a AuthorizationUserUseCaseDecorator) CreateByMe(create input_port.CreateByMe) error {
+	return a.inner.CreateByMe(create)
+}
+
+func (a AuthorizationUserUseCaseDecorator) VerifyEmail(user entity.User, input input_port.VerifyEmail) (entity.User, string, error) {
+	return a.inner.VerifyEmail(user, input)
 }

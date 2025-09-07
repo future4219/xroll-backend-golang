@@ -20,11 +20,17 @@ func ToEntities[Entity any, Model model[Entity]](models []Model) []Entity {
 
 func (u User) Entity() entity.User {
 	return entity.User{
-		ID:          u.ID,
-		Name:        u.Name,
-		Age:         u.Age,
-		UserType:    entconst.UserType(u.UserType),
-		GofileToken: u.GofileToken,
+		ID:             u.ID,
+		Name:           u.Name,
+		Age:            u.Age,
+		UserType:       entconst.UserType(u.UserType),
+		Email:          u.Email,
+		HashedPassword: u.HashedPassword,
+		GofileToken:   u.GofileToken,
+		EmailVerified: u.EmailVerified,
+		IsDeleted:     u.IsDeleted,
+		CreatedAt:     u.CreatedAt,
+		UpdatedAt:     u.UpdatedAt,
 	}
 }
 
@@ -48,5 +54,14 @@ func (c VideoComment) Entity() entity.Comment {
 		Comment:   c.Comment,
 		LikeCount: c.LikeCount,
 		CreatedAt: c.CreatedAt,
+	}
+}
+
+func (r RegisterVerification) Entity() entity.RegisterVerification {
+	return entity.RegisterVerification{
+		Email:                    r.Email,
+		ExpiresAt:                r.ExpiresAt,
+		HashedPassword:           r.HashedPassword,
+		HashedAuthenticationCode: r.HashedAuthenticationCode,
 	}
 }

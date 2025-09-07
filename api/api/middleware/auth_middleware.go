@@ -33,6 +33,50 @@ func NewAuthMiddleware(userUC input_port.IUserUseCase) *AuthMiddleware {
 	return &AuthMiddleware{userUC}
 }
 
+const tokenCookieName = "xroll_at"
+
+// header の Bearer か cookie(xroll_at) からトークンを取る
+func extractToken(c echo.Context) (string, error) {
+	authHeader := c.Request().Header.Get("Authorization")
+	if strings.HasPrefix(authHeader, schema.TokenType+" ") {
+		return strings.TrimPrefix(authHeader, schema.TokenType+" "), nil
+	}
+	ck, err := c.Cookie(tokenCookieName)
+	if err == nil && ck != nil && ck.Value != "" {
+		return ck.Value, nil
+	}
+	return "", ErrNoAuthorizationHeader
+}
+
+// ヘッダ or Cookie どっちでもOK（推奨：動画プロキシや画像などに使う）
+func (m *AuthMiddleware) AuthenticateCookieOrHeader(next echo.HandlerFunc) echo.HandlerFunc {
+	logger, _ := log.NewLogger()
+
+	return func(c echo.Context) error {
+		token, err := extractToken(c)
+		if err != nil {
+			logger.Info("Failed to authenticate (no header & no cookie)", zap.Error(err))
+			return echo.NewHTTPError(http.StatusUnauthorized)
+		}
+
+		userID, err := m.userUC.Authenticate(token)
+		if err != nil {
+			logger.Info("Failed to authenticate (invalid token)", zap.Error(err))
+			return echo.NewHTTPError(http.StatusUnauthorized)
+		}
+
+		user, err := m.userUC.FindByID(entity.User{
+			UserType: entconst.SystemAdmin, // 既存に合わせる
+		}, userID)
+		if err != nil {
+			logger.Error("Failed to find me", zap.Error(err))
+			return echo.NewHTTPError(http.StatusUnauthorized)
+		}
+		c = SetToContext(c, user)
+		return next(c)
+	}
+}
+
 // Authenticate
 // tokenを取得して、認証するmiddlewareの例
 func (m *AuthMiddleware) Authenticate(next echo.HandlerFunc) echo.HandlerFunc {

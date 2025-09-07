@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/usecase/output_port"
@@ -20,7 +21,7 @@ func NewGofileAPI() output_port.GofileAPIDriver {
 // Gofileの https://api.gofile.io/contents/{contentId} を使う
 func (t *GofileAPIDriver) GetContent(gofileID string, gofileToken string) (output_port.GofileGetContentRes, error) {
 	var zero output_port.GofileGetContentRes
-	const baseURL = "https://api.gofile.io/contents/"
+	baseURL := os.Getenv("GOFILE_API_ENDPOINT") + "/contents/"
 
 	// タイムアウト付きコンテキスト
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -65,7 +66,7 @@ func (t *GofileAPIDriver) GetContent(gofileID string, gofileToken string) (outpu
 // 直リンクを発行（POST /contents/{contentId}/directlinks）
 // ※戻り値は単体の GofileDirectLink に変更
 func (t *GofileAPIDriver) IssueDirectLink(contentID, gofileToken string) (output_port.GofileDirectLink, error) {
-	const baseURL = "https://api.gofile.io/contents/"
+	baseURL := os.Getenv("GOFILE_API_ENDPOINT") + "/contents/"
 	var zero output_port.GofileDirectLink
 
 	// レスポンス用（data 直下がそのまま GofileDirectLink の形）
@@ -110,7 +111,7 @@ func (t *GofileAPIDriver) IssueDirectLink(contentID, gofileToken string) (output
 }
 
 func (t *GofileAPIDriver) GetDirectLinks(contentID, gofileToken string) (map[string]output_port.GofileDirectLink, error) {
-	const baseURL = "https://api.gofile.io/contents/"
+	baseURL := os.Getenv("GOFILE_API_ENDPOINT") + "/contents/"
 
 	// レスポンス用ローカル型（必要十分だけ定義）
 	type directLinksResp struct {
