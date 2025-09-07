@@ -116,9 +116,10 @@ func GofileVideoResFromEntity(e entity.GofileVideo) GofileVideoRes {
 	return GofileVideoRes{
 		ID:                  e.ID,
 		Name:                e.Name,
-		GofileID:            e.GofileID,
-		GofileDirectURL:     e.GofileDirectURL,
-		VideoURL:            e.VideoURL,
+		// セキュリティ上、GofileIDとGofileDirectURLは返さない
+		// GofileID:            e.GofileID,
+		// GofileDirectURL:     e.GofileDirectURL,
+		// VideoURL:            e.VideoURL,
 		ThumbnailURL:        e.ThumbnailURL,
 		LikeCount:           e.LikeCount,
 		IsShared:            e.IsShared,

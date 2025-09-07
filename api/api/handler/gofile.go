@@ -4,9 +4,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
-	"strings"
 	"syscall"
 
 	"github.com/labstack/echo/v4"
@@ -178,19 +176,36 @@ func (g *GofileHandler) UpdateIsShareVideo(c echo.Context) error {
 }
 
 func (g *GofileHandler) ProxyGofileVideo(c echo.Context) error {
-	rawURL := c.QueryParam("url")
-	if rawURL == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "URLパラメータが必要です (?url=...)")
+	logger, _ := log.NewLogger()
+
+	ctx := c.Request().Context()
+	user, err := middleware.GetUserFromContext(ctx) // トークンからIDを取得
+	if err != nil {
+		logger.Error("Failed to get id from context", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	
+	gofileVideoId := c.QueryParam("id")
+	if gofileVideoId == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "IDが必要です (?id=...)")
 	}
 
-	decodedURL := rawURL
-	if strings.Contains(rawURL, "%") {
-		u, err := url.QueryUnescape(rawURL)
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "URLのデコードに失敗しました")
+	gofile, err := g.GofileUC.FindByID(user, gofileVideoId)
+	if err != nil {
+		logger.Error("Failed to find by id", zap.Error(err))
+		switch {
+		case errors.Is(err, interactor.ErrKind.NotFound):
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		default:
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
-		decodedURL = u
 	}
+	decodedURL := gofile.GofileDirectURL
+
+	if gofile.IsShared == false && gofile.UserID != user.ID {
+		return echo.NewHTTPError(http.StatusForbidden, "this video is not shared")
+	}
+
 
 	token := os.Getenv("GOFILE_API_KEY")
 	if token == "" {
