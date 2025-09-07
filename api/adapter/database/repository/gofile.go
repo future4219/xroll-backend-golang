@@ -5,6 +5,7 @@ import (
 
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/adapter/database/model"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entity"
+	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/usecase/interactor"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/usecase/output_port"
 	"gorm.io/gorm"
 )
@@ -99,7 +100,11 @@ func (r *GofileRepository) FindByID(id string) (entity.GofileVideo, error) {
 		Preload("GofileTags").
 		Preload("GofileVideoComments").
 		Preload("User").
+		Where("is_deleted = ?", false).
 		First(&m, "id = ?", id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return entity.GofileVideo{}, fmt.Errorf("%w: gofile video", interactor.ErrKind.NotFound)
+		}
 		return entity.GofileVideo{}, err
 	}
 
@@ -143,7 +148,7 @@ func (r *GofileRepository) FindByUserID(userID string) ([]entity.GofileVideo, er
 		Preload("User").
 		Preload("GofileTags").
 		Preload("GofileVideoComments").
-		Where("user_id = ?", userID).
+		Where("user_id = ? AND is_deleted = ?", userID, false).
 		Find(&res).Error; err != nil {
 		return nil, err
 	}
@@ -194,7 +199,7 @@ func (r *GofileRepository) FindByUserIDShared(userId string) ([]entity.GofileVid
 		Preload("User").
 		Preload("GofileTags").
 		Preload("GofileVideoComments").
-		Where("user_id = ? AND is_shared = ?", userId, true).
+		Where("user_id = ? AND is_shared = ? AND is_deleted = ?", userId, true, false).
 		Find(&res).Error; err != nil {
 		return nil, err
 	}
@@ -239,5 +244,8 @@ func (r *GofileRepository) FindByUserIDShared(userId string) ([]entity.GofileVid
 }
 
 func (r *GofileRepository) Delete(id string) error {
-	return r.db.Delete(&model.GofileVideo{}, "id = ?", id).Error
+	return r.db.Model(&model.GofileVideo{}).
+		Where("id = ?", id).
+		Update("is_deleted", true).Error
+
 }
