@@ -9,6 +9,8 @@ type GofileVideoRes struct {
 	GofileDirectURL     string                  `json:"gofile_direct_url"`     // GofileのダイレクトURL
 	VideoURL            string                  `json:"video_url"`             // 動画のURL
 	ThumbnailURL        string                  `json:"thumbnail_url"`         // サムネイルのURL
+	Description         string                  `json:"description"`           // 動画の説明
+	PlayCount           int                     `json:"play_count"`            // 再生回数
 	LikeCount           int                     `json:"like_count"`            // いいねの数
 	IsShared            bool                    `json:"is_shared"`             // 動画が共有されているかどうか
 	GofileTags          []GofileTagRes          `json:"gofile_tags"`           // タグの情報
@@ -42,7 +44,12 @@ type GofileCreateRes struct {
 	UserID          *string        `json:"user_id"`           // ユーザーID
 	GofileTags      []GofileTagRes `json:"gofile_tags"`       // タグの情報
 }
-
+type GofileUpdateReq struct {
+	Name        string   `json:"name" validate:"required"`      // 動画の名前
+	Description string   `json:"description"`                   // 動画の説明
+	TagIDs      []string `json:"tag_ids"`                       // タグのIDリスト
+	IsShared    bool     `json:"is_shared" validate:"required"` // 動画の共有状態
+}
 type GofileTagRes struct {
 	ID   string `json:"id"`   // タグのID
 	Name string `json:"name"` // タグの名前
@@ -114,13 +121,15 @@ func GofileVideoResFromEntity(e entity.GofileVideo) GofileVideoRes {
 	}
 
 	return GofileVideoRes{
-		ID:                  e.ID,
-		Name:                e.Name,
+		ID:   e.ID,
+		Name: e.Name,
 		// セキュリティ上、GofileIDとGofileDirectURLは返さない
 		// GofileID:            e.GofileID,
 		// GofileDirectURL:     e.GofileDirectURL,
 		// VideoURL:            e.VideoURL,
 		ThumbnailURL:        e.ThumbnailURL,
+		Description:         e.Description,
+		PlayCount:           e.PlayCount,
 		LikeCount:           e.LikeCount,
 		IsShared:            e.IsShared,
 		GofileTags:          tags,

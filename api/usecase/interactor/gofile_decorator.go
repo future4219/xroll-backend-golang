@@ -16,6 +16,9 @@ func NewAuthorizationGofileUseCase(inner input_port.IGofileUseCase) input_port.I
 func (a AuthorizationGofileUseCaseDecorator) Create(user entity.User, gofile input_port.GofileCreate) (entity.GofileVideo, error) {
 	return a.inner.Create(user, gofile)
 }
+func (a AuthorizationGofileUseCaseDecorator) Update(user entity.User, gofile input_port.GofileUpdate) (entity.GofileVideo, error) {
+	return a.inner.Update(user, gofile)
+}
 
 func (a AuthorizationGofileUseCaseDecorator) FindByUserID(user entity.User) ([]entity.GofileVideo, error) {
 	return a.inner.FindByUserID(user)

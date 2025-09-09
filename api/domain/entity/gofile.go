@@ -9,6 +9,8 @@ type GofileVideo struct {
 	GofileDirectURL     string               // Gofileの直接ダウンロードURL
 	VideoURL            string               // 動画のURL
 	ThumbnailURL        string               // 動画のサムネイルURL
+	Description         string               // 動画の説明
+	PlayCount           int                  // 再生回数
 	LikeCount           int                  // いいね数
 	IsShared            bool                 // 動画が共有されているかどうか
 	GofileTags          []GofileTag          // GofileTagとの多対多リレーション
@@ -17,6 +19,7 @@ type GofileVideo struct {
 	User                User                 // ユーザーとのリレーション
 	CreatedAt           time.Time            // 作成日時
 	UpdatedAt           time.Time            // 更新日時
+	IsDeleted           bool                 // 論理削除フラグ
 }
 
 type GofileVideoComment struct {

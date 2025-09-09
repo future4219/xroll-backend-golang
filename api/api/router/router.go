@@ -91,6 +91,7 @@ func NewServer(
 	//gofile
 	gofile := auth.Group("/gofile")
 	gofile.POST("/create", gofileHandler.Create)
+	gofile.PATCH("/update/:id", gofileHandler.Update)
 	gofile.GET("/video/:id", gofileHandler.FindByID)
 	gofile.GET("/:userId", gofileHandler.FindByUserID)
 	gofile.GET("/:userId/shared", gofileHandler.FindByUserIDShared)

@@ -26,11 +26,11 @@ func (u User) Entity() entity.User {
 		UserType:       entconst.UserType(u.UserType),
 		Email:          u.Email,
 		HashedPassword: u.HashedPassword,
-		GofileToken:   u.GofileToken,
-		EmailVerified: u.EmailVerified,
-		IsDeleted:     u.IsDeleted,
-		CreatedAt:     u.CreatedAt,
-		UpdatedAt:     u.UpdatedAt,
+		GofileToken:    u.GofileToken,
+		EmailVerified:  u.EmailVerified,
+		IsDeleted:      u.IsDeleted,
+		CreatedAt:      u.CreatedAt,
+		UpdatedAt:      u.UpdatedAt,
 	}
 }
 
@@ -63,5 +63,43 @@ func (r RegisterVerification) Entity() entity.RegisterVerification {
 		ExpiresAt:                r.ExpiresAt,
 		HashedPassword:           r.HashedPassword,
 		HashedAuthenticationCode: r.HashedAuthenticationCode,
+	}
+}
+
+func (g GofileVideo) Entity() entity.GofileVideo {
+	return entity.GofileVideo{
+		ID:                  g.ID,
+		Name:                g.Name,
+		GofileID:            g.GofileID,
+		GofileDirectURL:     g.GofileDirectURL,
+		VideoURL:            g.VideoURL,
+		ThumbnailURL:        g.ThumbnailURL,
+		PlayCount:           g.PlayCount,
+		Description:         g.Description,
+		LikeCount:           g.LikeCount,
+		IsShared:            g.IsShared,
+		UserID:              g.UserID,
+		GofileTags:          ToEntities(g.GofileTags),
+		CreatedAt:           g.CreatedAt,
+		UpdatedAt:           g.UpdatedAt,
+		GofileVideoComments: ToEntities(g.GofileVideoComments),
+		IsDeleted:           g.IsDeleted,
+	}
+}
+
+func (gt GofileTag) Entity() entity.GofileTag {
+	return entity.GofileTag{
+		ID:   gt.ID,
+		Name: gt.Name,
+	}
+}
+func (gvc GofileVideoComment) Entity() entity.GofileVideoComment {
+	return entity.GofileVideoComment{
+		ID:            gvc.ID,
+		GofileVideoID: gvc.GofileVideoID,
+		Comment:       gvc.Comment,
+		LikeCount:     gvc.LikeCount,
+		CreatedAt:     gvc.CreatedAt,
+		UpdatedAt:     gvc.UpdatedAt,
 	}
 }

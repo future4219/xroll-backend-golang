@@ -63,6 +63,52 @@ func (g *GofileHandler) Create(c echo.Context) error {
 	return c.JSON(http.StatusCreated, schema.GofileCreateResFromEntity(res))
 }
 
+func (g *GofileHandler) Update(c echo.Context) error {
+	logger, _ := log.NewLogger()
+	var id string
+	if err := echo.PathParamsBinder(c).MustString("id", &id).BindError(); err != nil {
+		logger.Info("Failed to bind path param id", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	req := &schema.GofileUpdateReq{}
+	if err := c.Bind(req); err != nil {
+		logger.Error("Failed to bind request", zap.Error(err))
+
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	ctx := c.Request().Context()
+	user, err := middleware.GetUserFromContext(ctx) // トークンからIDを取得
+	if err != nil {
+		logger.Error("Failed to get id from context", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	res, err := g.GofileUC.Update(
+		user,
+		input_port.GofileUpdate{
+			ID:          id,
+			Name:        req.Name,
+			Description: req.Description,
+			TagIDs:      req.TagIDs,
+			IsShare:     req.IsShared,
+		})
+	if err != nil {
+		logger.Info("Failed to update gofile", zap.Error(err))
+		switch {
+		case errors.Is(err, interactor.ErrKind.NotFound):
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+
+		case errors.Is(err, interactor.ErrKind.Unauthorized):
+			return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+		default:
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+	return c.JSON(http.StatusOK, schema.GofileVideoResFromEntity(res))
+}
+
 func (g *GofileHandler) FindByID(c echo.Context) error {
 	logger, _ := log.NewLogger()
 

@@ -5,9 +5,12 @@ import (
 )
 
 type UserRes struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Age  int    `json:"age"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Age       int    `json:"age"`
+	UserType  string `json:"user_type"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 type UsersRes struct {
@@ -44,10 +47,14 @@ type UserSearchQueryReq struct {
 	Limit    int    `query:"limit"`
 }
 
-
 func UserResFromEntity(user entity.User) UserRes {
 	return UserRes{
-		ID: user.ID,
+		ID:        user.ID,
+		Name:      user.Name,
+		Age:       user.Age,
+		UserType:  user.UserType.String(),
+		CreatedAt: user.CreatedAt.String(),
+		UpdatedAt: user.UpdatedAt.String(),
 	}
 }
 

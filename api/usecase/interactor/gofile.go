@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 
+	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/constructor"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entity"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/usecase/input_port"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/usecase/output_port"
@@ -77,6 +78,7 @@ func (u *GofileUseCase) Create(user entity.User, gofileCreate input_port.GofileC
 		GofileDirectURL: gofileDirectLink,
 		VideoURL:        videoURL,
 		ThumbnailURL:    gofileGetContentRes.Data.Thumbnail,
+		Description:     "",    // 最初は空文字
 		IsShared:        false, // 初期状態では公開されていない
 		UserID:          user.ID,
 		GofileTags:      gofileTags,
@@ -97,6 +99,56 @@ func (u *GofileUseCase) Create(user entity.User, gofileCreate input_port.GofileC
 		if err := u.userRepo.Update(user); err != nil {
 			return entity.GofileVideo{}, err
 		}
+	}
+
+	return res, nil
+}
+
+func (u *GofileUseCase) Update(user entity.User, update input_port.GofileUpdate) (entity.GofileVideo, error) {
+	updatingGofile, err := constructor.NewGofileUpdate(
+		update.ID,
+		update.Name,
+		update.Description,
+		update.TagIDs,
+		update.IsShare,
+	)
+	if err != nil {
+		return entity.GofileVideo{}, fmt.Errorf("failed to construct gofile update: %w", err)
+	}
+
+	video, err := u.gofileRepo.FindByID(updatingGofile.ID)
+	if err != nil {
+		return entity.GofileVideo{}, err
+	}
+
+	// 自分の動画のみ更新可能
+	if video.UserID != user.ID {
+		//　セキュリティ面を考慮して、非公開動画であればnotfoundで返す
+		if video.IsShared {
+			return entity.GofileVideo{}, fmt.Errorf("%w: you do not have permission to update this video", ErrKind.Unauthorized)
+		} else {
+			return entity.GofileVideo{}, fmt.Errorf("%w: video not found", ErrKind.NotFound)
+		}
+	}
+
+	video.Name = updatingGofile.Name
+	video.Description = updatingGofile.Description
+	video.GofileTags = func() []entity.GofileTag {
+		tags := make([]entity.GofileTag, 0, len(updatingGofile.TagIDs))
+		for _, tagID := range updatingGofile.TagIDs {
+			tags = append(tags, entity.GofileTag{ID: tagID})
+		}
+		return tags
+	}()
+	video.IsShared = updatingGofile.IsShare
+
+	if err := u.gofileRepo.Update(video); err != nil {
+		return entity.GofileVideo{}, err
+	}
+
+	res, err := u.gofileRepo.FindByID(video.ID)
+	if err != nil {
+		return entity.GofileVideo{}, err
 	}
 
 	return res, nil

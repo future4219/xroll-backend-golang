@@ -54,6 +54,8 @@ type GofileVideo struct {
 	GofileDirectURL     string               `gorm:"type:text;not null"`         // Gofileの直接ダウンロードURL
 	VideoURL            string               `gorm:"type:text;not null"`
 	ThumbnailURL        string               `gorm:"type:text;not null"`                                                                                              // 動画のサムネイルURL
+	PlayCount           int                  `gorm:"default:0"`                                                                                                       // 再生回数
+	Description         string               `gorm:"type:text"`                                                                                                       // 動画の説明
 	LikeCount           int                  `gorm:"default:0"`                                                                                                       // いいね数
 	IsShared            bool                 `gorm:"default:false"`                                                                                                   // 動画が共有されているかどうか
 	GofileTags          []GofileTag          `gorm:"many2many:gofile_video_tags;foreignKey:ID;joinForeignKey:GofileVideoID;References:ID;joinReferences:GofileTagID"` // GofileTagとの多対多リレーション

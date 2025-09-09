@@ -56,7 +56,9 @@ func (r *GofileRepository) Create(gofile entity.GofileVideo) error {
 	return nil
 }
 
-func (r *GofileRepository) Update(gofile entity.GofileVideo) error {
+func (r *GofileRepository) Update(gofile entity.GofileVideo) (err error) {
+	defer output_port.WrapDatabaseError(&err)
+
 	var m model.GofileVideo
 
 	gofileTagsModel := make([]model.GofileTag, 0, len(gofile.GofileTags))
@@ -73,6 +75,8 @@ func (r *GofileRepository) Update(gofile entity.GofileVideo) error {
 		GofileDirectURL: gofile.GofileDirectURL,
 		VideoURL:        gofile.VideoURL,
 		ThumbnailURL:    gofile.ThumbnailURL,
+		Description:     gofile.Description,
+		PlayCount:       gofile.PlayCount,
 		LikeCount:       gofile.LikeCount,
 		IsShared:        gofile.IsShared,
 		UserID:          gofile.UserID,
@@ -131,6 +135,8 @@ func (r *GofileRepository) FindByID(id string) (entity.GofileVideo, error) {
 		GofileDirectURL:     m.GofileDirectURL,
 		VideoURL:            m.VideoURL,
 		ThumbnailURL:        m.ThumbnailURL,
+		Description:         m.Description,
+		PlayCount:           m.PlayCount,
 		LikeCount:           m.LikeCount,
 		IsShared:            m.IsShared,
 		GofileTags:          tags,
@@ -179,9 +185,12 @@ func (r *GofileRepository) FindByUserID(userID string) ([]entity.GofileVideo, er
 			GofileDirectURL:     video.GofileDirectURL,
 			VideoURL:            video.VideoURL,
 			ThumbnailURL:        video.ThumbnailURL,
+			Description:         video.Description,
+			PlayCount:           video.PlayCount,
 			LikeCount:           video.LikeCount,
 			IsShared:            video.IsShared,
 			UserID:              video.UserID,
+			User:                video.User.Entity(),
 			GofileTags:          tags,
 			GofileVideoComments: gofileVideoComments,
 			CreatedAt:           video.CreatedAt,
@@ -230,9 +239,12 @@ func (r *GofileRepository) FindByUserIDShared(userId string) ([]entity.GofileVid
 			GofileDirectURL:     video.GofileDirectURL,
 			VideoURL:            video.VideoURL,
 			ThumbnailURL:        video.ThumbnailURL,
+			Description:         video.Description,
+			PlayCount:           video.PlayCount,
 			LikeCount:           video.LikeCount,
 			IsShared:            video.IsShared,
 			UserID:              video.UserID,
+			User:                video.User.Entity(),
 			GofileTags:          tags,
 			GofileVideoComments: gofileVideoComments,
 			CreatedAt:           video.CreatedAt,
