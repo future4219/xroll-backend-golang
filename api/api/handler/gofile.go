@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/api/middleware"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/api/schema"
+	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entconst"
 	log "gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/log"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/usecase/input_port"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/usecase/interactor"
@@ -125,7 +126,7 @@ func (g *GofileHandler) FindByID(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	res, err := g.GofileUC.FindByID(user, id)
+	res, hasLike, err := g.GofileUC.FindByID(user, id)
 	if err != nil {
 		logger.Error("Failed to find by id", zap.Error(err))
 		switch {
@@ -135,7 +136,10 @@ func (g *GofileHandler) FindByID(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 	}
-	return c.JSON(http.StatusOK, schema.GofileVideoResFromEntity(res))
+	return c.JSON(http.StatusOK, schema.GofileVideoResWithLike{
+		GofileVideoRes: schema.GofileVideoResFromEntity(res),
+		HasLike:        hasLike,
+	})
 }
 
 func (g *GofileHandler) FindByUserID(c echo.Context) error {
@@ -251,6 +255,126 @@ func (g *GofileHandler) Delete(c echo.Context) error {
 	}
 	return c.NoContent(http.StatusOK)
 }
+func (g *GofileHandler) LikeVideo(c echo.Context) error {
+	logger, _ := log.NewLogger()
+	ctx := c.Request().Context()
+	user, err := middleware.GetUserFromContext(ctx) // トークンからIDを取得
+	if err != nil {
+		logger.Error("Failed to get id from context", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	var id string
+	if err := echo.PathParamsBinder(c).MustString("id", &id).BindError(); err != nil {
+		logger.Info("Failed to bind path param id", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	err = g.GofileUC.LikeVideo(user, id)
+	if err != nil {
+		logger.Error("Failed to like video", zap.Error(err))
+		switch {
+		case errors.Is(err, interactor.ErrKind.NotFound):
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		default:
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+	return c.NoContent(http.StatusOK)
+}
+
+func (g *GofileHandler) UnlikeVideo(c echo.Context) error {
+	logger, _ := log.NewLogger()
+
+	ctx := c.Request().Context()
+	user, err := middleware.GetUserFromContext(ctx) // トークンからIDを取得
+	if err != nil {
+		logger.Error("Failed to get id from context", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	var id string
+	if err := echo.PathParamsBinder(c).MustString("id", &id).BindError(); err != nil {
+		logger.Info("Failed to bind path param id", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	fmt.Printf("id to delete: %s\n", id)
+
+	err = g.GofileUC.UnlikeVideo(user, id)
+	if err != nil {
+		logger.Error("Failed to unlike video", zap.Error(err))
+		switch {
+		case errors.Is(err, interactor.ErrKind.NotFound):
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		default:
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+func (g *GofileHandler) FindLikedVideos(c echo.Context) error {
+	logger, _ := log.NewLogger()
+
+	ctx := c.Request().Context()
+	user, err := middleware.GetUserFromContext(ctx) // トークンからIDを取得
+	if err != nil {
+		logger.Error("Failed to get id from context", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	videos, err := g.GofileUC.FindLikedVideos(user)
+	if err != nil {
+		logger.Error("Failed to find liked videos", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, schema.GofileVideoListFromEntity(videos))
+}
+
+func (g *GofileHandler) Search(c echo.Context) error {
+	logger, _ := log.NewLogger()
+
+	ctx := c.Request().Context()
+	user, err := middleware.GetUserFromContext(ctx) // トークンからIDを取得
+	if err != nil {
+		logger.Error("Failed to get id from context", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	req, err := schema.BindGofileVideoSearchReq(c)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	order, err := entconst.NewOrder(req.Order)
+	if err != nil {
+		logger.Info("Failed to new sort order", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	orderBy, err := entconst.NewGofileOrderBy(req.OrderBy)
+	if err != nil {
+		logger.Info("Failed to new gofile order by", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	query := input_port.GofileSearchQuery{
+		Q:       req.Q,
+		Skip:    req.Skip,
+		Limit:   req.Limit,
+		OrderBy: orderBy,
+		Order:   order,
+	}
+
+	videos, err := g.GofileUC.Search(user, query)
+	if err != nil {
+		logger.Error("Failed to search videos", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, schema.GofileVideoListFromEntity(videos))
+}
 
 func (g *GofileHandler) ProxyGofileVideo(c echo.Context) error {
 	logger, _ := log.NewLogger()
@@ -267,7 +391,7 @@ func (g *GofileHandler) ProxyGofileVideo(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "IDが必要です (?id=...)")
 	}
 
-	gofile, err := g.GofileUC.FindByID(user, gofileVideoId)
+	gofile, _, err := g.GofileUC.FindByID(user, gofileVideoId)
 	if err != nil {
 		logger.Error("Failed to find by id", zap.Error(err))
 		switch {

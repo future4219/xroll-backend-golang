@@ -135,13 +135,33 @@ func (u *UserUseCase) Search(_ entity.User, query string, userType string, skip 
 	}
 }
 
-func (u *UserUseCase) Update(_ entity.User, user input_port.UserUpdate) (entity.User, error) {
+func (u *UserUseCase) Update(user entity.User, userUpdate input_port.UserUpdate) (entity.User, error) {
 	// TODO: 更新処理
-	if user, err := u.userRepo.FindByID(user.ID); err != nil {
-		return entity.User{}, fmt.Errorf("failed to find user: %w", err)
-	} else {
-		return user, nil
+	updatingUser, err := constructor.NewUserUpdate(
+		user.ID,
+		userUpdate.Name,
+		userUpdate.Bio,
+	)
+	if err != nil {
+		return entity.User{}, fmt.Errorf("failed to construct user update: %w", err)
 	}
+
+	if updatingUser.ID != user.ID {
+		return entity.User{}, fmt.Errorf("cannot update other user")
+	}
+
+	user.Name = updatingUser.Name
+	user.Bio = updatingUser.Bio
+	if err := u.userRepo.Update(user); err != nil {
+		return entity.User{}, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	res, err := u.userRepo.FindByID(user.ID)
+	if err != nil {
+		return entity.User{}, fmt.Errorf("failed to find user: %w", err)
+	}
+
+	return res, nil
 }
 
 func (u *UserUseCase) Delete(_ entity.User, userID string) (entity.User, error) {

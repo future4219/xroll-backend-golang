@@ -24,7 +24,7 @@ func (a AuthorizationGofileUseCaseDecorator) FindByUserID(user entity.User) ([]e
 	return a.inner.FindByUserID(user)
 }
 
-func (a AuthorizationGofileUseCaseDecorator) FindByID(user entity.User, id string) (entity.GofileVideo, error) {
+func (a AuthorizationGofileUseCaseDecorator) FindByID(user entity.User, id string) (entity.GofileVideo, bool, error) {
 	return a.inner.FindByID(user, id)
 }
 
@@ -38,4 +38,20 @@ func (a AuthorizationGofileUseCaseDecorator) UpdateIsShareVideo(user entity.User
 
 func (a AuthorizationGofileUseCaseDecorator) Delete(user entity.User, id string) error {
 	return a.inner.Delete(user, id)
+}
+
+func (a AuthorizationGofileUseCaseDecorator) LikeVideo(user entity.User, videoID string) error {
+	return a.inner.LikeVideo(user, videoID)
+}
+
+func (a AuthorizationGofileUseCaseDecorator) UnlikeVideo(user entity.User, videoID string) error {
+	return a.inner.UnlikeVideo(user, videoID)
+}
+
+func (a AuthorizationGofileUseCaseDecorator) FindLikedVideos(user entity.User) ([]entity.GofileVideo, error) {
+	return a.inner.FindLikedVideos(user)
+}
+
+func (a AuthorizationGofileUseCaseDecorator) Search(user entity.User, query input_port.GofileSearchQuery) ([]entity.GofileVideo, error) {
+	return a.inner.Search(user, query)
 }

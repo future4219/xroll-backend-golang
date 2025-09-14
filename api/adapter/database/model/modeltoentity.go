@@ -25,6 +25,7 @@ func (u User) Entity() entity.User {
 		Age:            u.Age,
 		UserType:       entconst.UserType(u.UserType),
 		Email:          u.Email,
+		Bio:            u.Bio,
 		HashedPassword: u.HashedPassword,
 		GofileToken:    u.GofileToken,
 		EmailVerified:  u.EmailVerified,

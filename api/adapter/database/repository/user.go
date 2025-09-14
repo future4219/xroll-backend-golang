@@ -165,6 +165,7 @@ func (r *UserRepository) update(tx *gorm.DB, user entity.User) (err error) {
 				"name":            user.Name,
 				"age":             user.Age,
 				"user_type":       user.UserType.String(),
+				"bio":             user.Bio,
 				"email":           user.Email,
 				"hashed_password": user.HashedPassword,
 				"gofile_token":    user.GofileToken,

@@ -16,11 +16,9 @@ type UserCreate struct {
 }
 
 type UserUpdate struct {
-	ID        string
-	StudentID string
-	IdmUniv   string
-	IdmBus    string
-	UserType  string
+	ID   string
+	Name string
+	Bio  string
 }
 
 type UserUpdatePassword struct {

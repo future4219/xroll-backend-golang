@@ -94,9 +94,16 @@ func NewServer(
 	gofile.PATCH("/update/:id", gofileHandler.Update)
 	gofile.GET("/video/:id", gofileHandler.FindByID)
 	gofile.GET("/:userId", gofileHandler.FindByUserID)
+	gofile.GET("/search", gofileHandler.Search)
 	gofile.GET("/:userId/shared", gofileHandler.FindByUserIDShared)
 	gofile.PATCH("/update-is-shared", gofileHandler.UpdateIsShareVideo)
 	gofile.DELETE("/delete/:id", gofileHandler.Delete)
+	gofile.POST("/like/:id", gofileHandler.LikeVideo)
+	gofile.POST("/unlike/:id", gofileHandler.UnlikeVideo)
+	gofile.GET("/liked-videos", gofileHandler.FindLikedVideos)
+
+	// authCookieOrHeader
+	// Cookie or Header どちらでも認証可能
 	gofileAuthCookieOrHeader := authCookieOrHeader.Group("/gofile")
 	gofileAuthCookieOrHeader.GET("/proxy", gofileHandler.ProxyGofileVideo)
 

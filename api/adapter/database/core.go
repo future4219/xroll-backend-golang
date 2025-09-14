@@ -62,6 +62,7 @@ func Migrate(db *gorm.DB) error {
 		&model.GofileVideo{},
 		&model.GofileVideoComment{},
 		&model.GofileTag{},
+		&model.GofileVideoLike{},
 	); err != nil {
 		return err
 	}
@@ -70,6 +71,7 @@ func Migrate(db *gorm.DB) error {
 
 func DropDB(db *gorm.DB) {
 	_ = db.Migrator().DropTable(
+		&model.GofileVideoLike{},
 		&model.User{},
 		&model.RegisterVerification{},
 		&model.Video{},

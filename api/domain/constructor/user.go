@@ -56,31 +56,27 @@ func NewUserCreate(
 }
 
 func NewUserUpdate(
-	userId string,
-	studentId string,
-	idmUniv string,
-	idmBus string,
+	Id string,
+	name string,
+	bio string,
 ) (entity.User, error) {
 
-	if userId == "" {
-		return entity.User{}, entconst.NewValidationError("user id is empty")
+	if Id == "" {
+		return entity.User{}, entconst.NewValidationError("id is empty")
 	}
-
-	if studentId == "" {
-		return entity.User{}, entconst.NewValidationError("student id is empty")
+	if name == "" {
+		return entity.User{}, entconst.NewValidationError("name is empty")
 	}
-
-	if idmUniv == "" {
-		return entity.User{}, entconst.NewValidationError("idm univ is empty")
+	if len(name) > 100 {
+		return entity.User{}, entconst.NewValidationError("name is too long")
 	}
-
-	if idmBus == "" {
-		return entity.User{}, entconst.NewValidationError("idm bus is empty")
+	if len(bio) > 500 {
+		return entity.User{}, entconst.NewValidationError("bio is too long")
 	}
 
 	return entity.User{
-		ID:   userId,
-		Name: "",
-		Age:  0,
+		ID:   Id,
+		Name: name,
+		Bio:  bio,
 	}, nil
 }

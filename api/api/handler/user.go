@@ -122,11 +122,9 @@ func (h *UserHandler) Update(c echo.Context) error {
 	res, err := h.UserUC.Update(
 		user,
 		input_port.UserUpdate{
-			ID:        user.ID,
-			StudentID: req.StudentID,
-			IdmUniv:   req.IdmUniv,
-			IdmBus:    req.IdmBus,
-			UserType:  req.UserType,
+			ID:   user.ID,
+			Name: req.Name,
+			Bio:  req.Bio,
 		})
 	if err != nil {
 		logger.Info("Failed to update user", zap.Error(err))

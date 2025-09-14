@@ -1,6 +1,9 @@
 package schema
 
-import "gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entity"
+import (
+	"github.com/labstack/echo/v4"
+	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entity"
+)
 
 type GofileVideoRes struct {
 	ID                  string                  `json:"id"`                    // 動画のID
@@ -19,6 +22,11 @@ type GofileVideoRes struct {
 	User                UserRes                 `json:"user"`                  // ユーザー情報
 	CreatedAt           string                  `json:"created_at"`            // 作成日時
 	UpdatedAt           string                  `json:"updated_at"`            // 更新日時
+}
+
+type GofileVideoResWithLike struct {
+	GofileVideoRes
+	HasLike bool `json:"has_like"` // ユーザーがこの動画にいいねしているかどうか
 }
 
 type GofileVideoListRes struct {
@@ -66,6 +74,14 @@ type GofileVideoCommentRes struct {
 type GofileUpdateIsShareReq struct {
 	VideoID  string `json:"video_id" validate:"required"`  // 動画のID
 	IsShared bool   `json:"is_shared" validate:"required"` // 動画の共有状態
+}
+
+type GofileVideoSearchReq struct {
+	Q       string
+	Skip    int
+	Limit   int
+	Order   string
+	OrderBy string
 }
 
 func GofileCreateResFromEntity(e entity.GofileVideo) GofileCreateRes {
@@ -139,4 +155,16 @@ func GofileVideoResFromEntity(e entity.GofileVideo) GofileVideoRes {
 		CreatedAt:           e.CreatedAt.Format("2006-01-02 15:04:05"),
 		UpdatedAt:           e.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
+}
+
+func BindGofileVideoSearchReq(c echo.Context) (ret GofileVideoSearchReq, err error) {
+	const Delimiter = ","
+	bind := echo.QueryParamsBinder(c).
+		String("q", &ret.Q).
+		Int("skip", &ret.Skip).
+		Int("limit", &ret.Limit).
+		String("order", &ret.Order).
+		String("order-by", &ret.OrderBy)
+
+	return ret, bind.BindError()
 }

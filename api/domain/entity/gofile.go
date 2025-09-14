@@ -36,3 +36,10 @@ type GofileTag struct {
 	Name         string        // タグの名前
 	GofileVideos []GofileVideo // GofileVideoとの多対多リレーション
 }
+
+type GofileVideoLike struct {
+	ID            string    // いいねのID
+	GofileVideoID string    // GofileVideoのID
+	UserID        string    // ユーザーのID
+	CreatedAt     time.Time // 作成日時
+}

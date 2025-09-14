@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -147,6 +148,7 @@ func (m *AuthMiddleware) AuthenticateIfPossible(next echo.HandlerFunc) echo.Hand
 		if err != nil {
 			logger.Info("Failed to authenticate", zap.Error(err))
 			// tokenがあっても認証に失敗した場合は401を返す
+			fmt.Println("err:", err)
 			return echo.NewHTTPError(http.StatusUnauthorized)
 		}
 

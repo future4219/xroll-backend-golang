@@ -154,23 +154,29 @@ func (u *GofileUseCase) Update(user entity.User, update input_port.GofileUpdate)
 	return res, nil
 }
 
-func (u *GofileUseCase) FindByID(user entity.User, id string) (entity.GofileVideo, error) {
+func (u *GofileUseCase) FindByID(user entity.User, id string) (entity.GofileVideo, bool, error) {
 	if id == "" {
-		return entity.GofileVideo{}, fmt.Errorf("id is required")
+		return entity.GofileVideo{}, false, fmt.Errorf("id is required")
 	}
 
 	video, err := u.gofileRepo.FindByID(id)
 	if err != nil {
-		return entity.GofileVideo{}, err
+		return entity.GofileVideo{}, false, err
 	}
 
 	// 自分の動画か、共有されている動画のみ閲覧可能
 	if video.UserID != user.ID && !video.IsShared {
 		// セキュリティを考慮して、notfoundで返す
-		return entity.GofileVideo{}, fmt.Errorf("%w: video not found", ErrKind.NotFound)
+		return entity.GofileVideo{}, false, fmt.Errorf("%w: video not found", ErrKind.NotFound)
 	}
 
-	return video, nil
+	// videoに対してuserがLikeしているかどうか
+	hasLike, err := u.gofileRepo.HasLike(user.ID, video.ID)
+	if err != nil {
+		return entity.GofileVideo{}, false, err
+	}
+
+	return video, hasLike, nil
 }
 
 // userIDが持っているVideoを返す
@@ -245,4 +251,115 @@ func (u *GofileUseCase) Delete(user entity.User, videoID string) error {
 	}
 
 	return nil
+}
+
+// userがいいねした動画を返す
+func (u *GofileUseCase) FindLikedVideos(user entity.User) ([]entity.GofileVideo, error) {
+	if user.ID == "" {
+		return nil, fmt.Errorf("userID is required")
+	}
+
+	fmt.Println("sakaihayate")
+	videos, err := u.gofileRepo.FindLikedVideos(user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return videos, nil
+}
+
+func (u *GofileUseCase) LikeVideo(user entity.User, videoID string) error {
+	if user.ID == "" || videoID == "" {
+		return fmt.Errorf("userID and videoID are required")
+	}
+
+	// 動画取得 & 閲覧可否（非公開は所有者のみ）
+	video, err := u.gofileRepo.FindByID(videoID)
+	if err != nil {
+		return err
+	}
+	if video.UserID != user.ID && !video.IsShared {
+		return fmt.Errorf("%w: video not found", ErrKind.NotFound)
+	}
+
+	// 既にLike済みなら冪等に成功扱い
+	has, err := u.gofileRepo.HasLike(user.ID, videoID)
+	if err != nil {
+		return err
+	}
+	if has {
+		return nil
+	}
+
+	// いいね作成（ユニーク制約で二重押しを遮断）
+	like := entity.GofileVideoLike{
+		ID:            u.ulid.GenerateID(),
+		GofileVideoID: videoID,
+		UserID:        user.ID,
+		CreatedAt:     u.clock.Now(),
+	}
+	if err := u.gofileRepo.CreateLike(like); err != nil {
+		// すでに存在（ユニーク違反）＝並走二重押し → 冪等成功扱い
+		if output_port.IsUniqueViolation(err) {
+			return nil
+		}
+		return err
+	}
+
+	// LikeCountを+1（レース時も最終的に正しく近づく）
+	video.LikeCount += 1
+	return u.gofileRepo.Update(video)
+}
+
+func (u *GofileUseCase) UnlikeVideo(user entity.User, videoID string) error {
+	if user.ID == "" || videoID == "" {
+		return fmt.Errorf("userID and videoID are required")
+	}
+
+	// 動画取得 & 閲覧可否（非公開は所有者のみ）
+	video, err := u.gofileRepo.FindByID(videoID)
+	if err != nil {
+		return err
+	}
+	if video.UserID != user.ID && !video.IsShared {
+		return fmt.Errorf("%w: video not found", ErrKind.NotFound)
+	}
+
+	// 未Likeなら冪等に成功扱い
+	has, err := u.gofileRepo.HasLike(user.ID, videoID)
+	if err != nil {
+		return err
+	}
+	if !has {
+		return nil
+	}
+
+	// いいね削除（削除できたらだけカウントを-1）
+	affected, err := u.gofileRepo.DeleteLike(user.ID, videoID)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		// 既に消えていた等 → 冪等成功扱い
+		return nil
+	}
+
+	if video.LikeCount > 0 {
+		video.LikeCount -= 1
+	}
+	return u.gofileRepo.Update(video)
+}
+
+func (u *GofileUseCase) Search(user entity.User, query input_port.GofileSearchQuery) ([]entity.GofileVideo, error) {
+	videos, err := u.gofileRepo.Search(output_port.GofileSearchQuery{
+		Q:       query.Q,
+		Skip:    query.Skip,
+		Limit:   query.Limit,
+		OrderBy: query.OrderBy,
+		Order:   query.Order,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return videos, nil
 }

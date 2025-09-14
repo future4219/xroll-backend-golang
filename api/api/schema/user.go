@@ -8,6 +8,7 @@ type UserRes struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	Age       int    `json:"age"`
+	Bio       string `json:"bio"`
 	UserType  string `json:"user_type"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
@@ -34,10 +35,8 @@ type CreateUserReqByAdmin struct {
 }
 
 type UpdateUserReq struct {
-	StudentID string `json:"studentId"`
-	IdmUniv   string `json:"idmUniv"`
-	IdmBus    string `json:"idmBus"`
-	UserType  string `json:"userType"`
+	Name string `json:"name" validate:"required"`
+	Bio  string `json:"bio"`
 }
 
 type UserSearchQueryReq struct {
@@ -52,6 +51,7 @@ func UserResFromEntity(user entity.User) UserRes {
 		ID:        user.ID,
 		Name:      user.Name,
 		Age:       user.Age,
+		Bio:       user.Bio,
 		UserType:  user.UserType.String(),
 		CreatedAt: user.CreatedAt.String(),
 		UpdatedAt: user.UpdatedAt.String(),

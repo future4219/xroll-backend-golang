@@ -5,17 +5,19 @@ import (
 )
 
 type User struct {
-	ID             string    `gorm:"primaryKey;type:varchar(255)"`
-	Name           string    `gorm:"type:varchar(100)"`
-	Age            int       `gorm:"default:0"`
-	UserType       string    `gorm:"type:varchar(20);index"`        // "guest" | "member" | "admin"
-	Email          *string   `gorm:"type:varchar(255);uniqueIndex"` // ゲストはNULL
-	HashedPassword *string   `gorm:"type:varchar(255)"`             // ゲストはNULL
-	GofileToken    *string   `gorm:"type:varchar(255);unique"`
-	EmailVerified  bool      `gorm:"default:false"`
-	IsDeleted      bool      `gorm:"default:false"`
-	CreatedAt      time.Time `gorm:"autoCreateTime"`
-	UpdatedAt      time.Time `gorm:"autoUpdateTime"`
+	ID               string            `gorm:"primaryKey;type:varchar(255)"`
+	Name             string            `gorm:"type:varchar(100)"`
+	Age              int               `gorm:"default:0"`
+	UserType         string            `gorm:"type:varchar(20);index"`        // "guest" | "member" | "admin"
+	Bio              string            `gorm:"type:text"`                     // 自己紹介
+	Email            *string           `gorm:"type:varchar(255);uniqueIndex"` // ゲストはNULL
+	HashedPassword   *string           `gorm:"type:varchar(255)"`             // ゲストはNULL
+	GofileToken      *string           `gorm:"type:varchar(255);unique"`
+	EmailVerified    bool              `gorm:"default:false"`
+	IsDeleted        bool              `gorm:"default:false"`
+	CreatedAt        time.Time         `gorm:"autoCreateTime"`
+	UpdatedAt        time.Time         `gorm:"autoUpdateTime"`
+	GofileVideoLikes []GofileVideoLike `gorm:"foreignKey:UserID"`
 }
 
 type RegisterVerification struct {
@@ -65,6 +67,14 @@ type GofileVideo struct {
 	IsDeleted           bool                 `gorm:"default:false"`                                                                                                   // 論理削除フラグ
 	CreatedAt           time.Time            `gorm:"autoCreateTime"`
 	UpdatedAt           time.Time            `gorm:"autoUpdateTime"` // 更新日時
+	Likes               []GofileVideoLike    `gorm:"foreignKey:GofileVideoID"`
+}
+
+type GofileVideoLike struct {
+	ID            string    `gorm:"primaryKey;type:varchar(255)"`
+	GofileVideoID string    `gorm:"type:varchar(255);not null;index;uniqueIndex:ux_user_video_like"`
+	UserID        string    `gorm:"type:varchar(255);not null;index;uniqueIndex:ux_user_video_like"`
+	CreatedAt     time.Time `gorm:"autoCreateTime"`
 }
 
 type GofileVideoComment struct {

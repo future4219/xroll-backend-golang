@@ -11,6 +11,7 @@ type User struct {
 	Name           string
 	Age            int
 	UserType       entconst.UserType
+	Bio            string
 	Email          *string
 	HashedPassword *string
 	GofileToken    *string

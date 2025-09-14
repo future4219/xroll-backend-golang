@@ -9,9 +9,10 @@ type UserType string
 type DelegateStatus string
 
 const (
-	SystemAdmin UserType = "SystemAdmin" // システム管理者
-	GuestUser   UserType = "GuestUser"   // ゲストユーザー
-	MemberUser  UserType = "MemberUser"  //会員
+	GuestUser    UserType = "GuestUser"    // 1. ゲストユーザー
+	MemberUser   UserType = "MemberUser"   // 2. 会員
+	OfficialUser UserType = "OfficialUser" // 3. 公式に認証されたユーザー
+	SystemAdmin  UserType = "SystemAdmin"  // 4. システム管理者
 )
 
 func (u UserType) String() string {
