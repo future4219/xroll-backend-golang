@@ -44,8 +44,8 @@ func IssueUserToken(userID string, issuedAt time.Time, scopes []string) (string,
 			ID:       id.String(),
 			Subject:  userID,
 			IssuedAt: jwt.NewNumericDate(issuedAt),
-			// １０分に固定している
-			ExpiresAt: jwt.NewNumericDate(issuedAt.Add(time.Minute * 10)),
+			// 30日に固定している
+			ExpiresAt: jwt.NewNumericDate(issuedAt.Add(time.Hour * 24 * 30)),
 		},
 		Scopes: scopes,
 	}
