@@ -20,6 +20,8 @@ var (
 	ErrAuthenticationCodeExpired    = errors.New("authentication code expired")
 	ErrAuthenticationCodeInvalid    = errors.New("authentication code invalid")
 	ErrRegisterVerificationNotFound = errors.New("register verification not found")
+	ErrPasswordNotSet               = errors.New("password not set")
+	ErrPasswordInvalid              = errors.New("password invalid")
 )
 
 type UserUseCase struct {
@@ -56,10 +58,19 @@ func NewUserUseCase(
 	}
 }
 
-func (u *UserUseCase) Login(loginID, password string) (entity.User, string, error) {
-	user, err := u.userRepo.FindByLoginID(loginID)
+func (u *UserUseCase) Login(email, password string) (entity.User, string, error) {
+	user, err := u.userRepo.FindByEmail(email)
 	if err != nil {
 		return entity.User{}, "", err
+	}
+
+	if user.HashedPassword == nil {
+		return entity.User{}, "", errors.Join(ErrKind.Unauthorized, ErrPasswordNotSet)
+	}
+
+	// セキュリティ的にNotFoundを返す
+	if err := u.userAuth.VerifyPassword(*user.HashedPassword, password); err != nil {
+		return entity.User{}, "", errors.Join(ErrKind.NotFound)
 	}
 
 	token, err := u.userAuth.IssueUserToken(user, u.clock.Now())

@@ -46,5 +46,6 @@ type UserAuth interface {
 	IssueUserTokenForUpdateEmail(user entity.User, issuedAt time.Time) (string, error)
 	IssueUserTokenForUpdatePassword(user entity.User, issuedAt time.Time) (string, error)
 	GenerateInitialPassword(length int) (string, error)
+	VerifyPassword(hashedPassword, input string) error
 	VerifyAuthenticationCode(hashedOtp, input string) error
 }

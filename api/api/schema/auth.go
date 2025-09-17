@@ -10,13 +10,13 @@ type BootRes struct {
 	UserID      string `json:"userId"`
 }
 type LoginReq struct {
-	LoginID  string `json:"loginId"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
 type LoginResUser struct {
-	ID      string `json:"Id"`
-	LoginID string `json:"loginId"`
+	ID    string `json:"Id"`
+	Email string `json:"email"`
 }
 
 type LoginRes struct {

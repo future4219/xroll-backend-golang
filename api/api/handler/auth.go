@@ -58,7 +58,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	user, token, err := h.UserUC.Login(req.LoginID, req.Password)
+	user, token, err := h.UserUC.Login(req.Email, req.Password)
 	if err != nil {
 		logger.Info("Failed to login", zap.Error(err))
 		switch {
