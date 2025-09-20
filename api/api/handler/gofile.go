@@ -376,6 +376,40 @@ func (g *GofileHandler) Search(c echo.Context) error {
 	return c.JSON(http.StatusOK, schema.GofileVideoListFromEntity(videos))
 }
 
+func (g *GofileHandler) CreateComment(c echo.Context) error {
+	logger, _ := log.NewLogger()
+	ctx := c.Request().Context()
+	user, err := middleware.GetUserFromContext(ctx) // トークンからIDを取得
+	if err != nil {
+		logger.Error("Failed to get id from context", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	var videoId string
+	if err := echo.PathParamsBinder(c).MustString("video-id", &videoId).BindError(); err != nil {
+		logger.Info("Failed to bind path param id", zap.Error(err))
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	var req schema.GofileCreateCommentReq
+	if err := c.Bind(&req); err != nil {
+		logger.Error("Failed to bind request", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	res, err := g.GofileUC.CreateComment(user, input_port.GofileVideoCommentCreate{
+		VideoID: videoId,
+		Comment: req.Comment,
+	})
+	if err != nil {
+		logger.Error("Failed to create comment", zap.Error(err))
+		switch {
+		case errors.Is(err, interactor.ErrKind.NotFound):
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		default:
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+	return c.JSON(http.StatusCreated, schema.GofileVideoCommentResFromEntity(res))
+}
+
 func (g *GofileHandler) ProxyGofileVideo(c echo.Context) error {
 	logger, _ := log.NewLogger()
 

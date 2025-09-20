@@ -17,6 +17,7 @@ type IGofileUseCase interface {
 	UnlikeVideo(user entity.User, videoID string) error
 	FindLikedVideos(user entity.User) ([]entity.GofileVideo, error)
 	Search(user entity.User, query GofileSearchQuery) ([]entity.GofileVideo, error)
+	CreateComment(user entity.User, input GofileVideoCommentCreate) (entity.GofileVideoComment, error)
 }
 
 type GofileCreate struct {
@@ -42,4 +43,9 @@ type GofileSearchQuery struct {
 	Limit   int
 	OrderBy entconst.GofileOrderBy
 	Order   entconst.Order
+}
+
+type GofileVideoCommentCreate struct {
+	VideoID string
+	Comment string
 }

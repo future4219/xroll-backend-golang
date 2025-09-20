@@ -23,8 +23,10 @@ type GofileVideo struct {
 }
 
 type GofileVideoComment struct {
-	ID            string    // コメントのID
-	GofileVideoID string    // GofileVideoのID
+	ID            string // コメントのID
+	GofileVideoID string // GofileVideoのID
+	UserID        string // ユーザーのID
+	User          User
 	Comment       string    // コメント内容
 	LikeCount     int       // いいね数
 	CreatedAt     time.Time // 作成日時

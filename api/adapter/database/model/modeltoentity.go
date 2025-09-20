@@ -80,6 +80,7 @@ func (g GofileVideo) Entity() entity.GofileVideo {
 		LikeCount:           g.LikeCount,
 		IsShared:            g.IsShared,
 		UserID:              g.UserID,
+		User:                g.User.Entity(),
 		GofileTags:          ToEntities(g.GofileTags),
 		CreatedAt:           g.CreatedAt,
 		UpdatedAt:           g.UpdatedAt,
@@ -98,6 +99,8 @@ func (gvc GofileVideoComment) Entity() entity.GofileVideoComment {
 	return entity.GofileVideoComment{
 		ID:            gvc.ID,
 		GofileVideoID: gvc.GofileVideoID,
+		UserID:        gvc.UserID,
+		User:          gvc.User.Entity(),
 		Comment:       gvc.Comment,
 		LikeCount:     gvc.LikeCount,
 		CreatedAt:     gvc.CreatedAt,

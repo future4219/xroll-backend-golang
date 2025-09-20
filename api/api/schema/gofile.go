@@ -64,11 +64,14 @@ type GofileTagRes struct {
 }
 
 type GofileVideoCommentRes struct {
-	ID        string `json:"id"`         // コメントのID
-	Comment   string `json:"comment"`    // コメントの内容
-	LikeCount int    `json:"like_count"` // いいねの数
-	CreatedAt string `json:"created_at"` // 作成日時
-	UpdatedAt string `json:"updated_at"` // 更新日時
+	ID            string  `json:"id"`         // コメントのID
+	GofileVideoID string  `json:"video_id"`   // コメントが属する動画のID
+	UserID        string  `json:"user_id"`    // コメントしたユーザーのID
+	User          UserRes `json:"user"`       // コメントしたユーザーの情報
+	Comment       string  `json:"comment"`    // コメントの内容
+	LikeCount     int     `json:"like_count"` // いいねの数
+	CreatedAt     string  `json:"created_at"` // 作成日時
+	UpdatedAt     string  `json:"updated_at"` // 更新日時
 }
 
 type GofileUpdateIsShareReq struct {
@@ -82,6 +85,9 @@ type GofileVideoSearchReq struct {
 	Limit   int
 	Order   string
 	OrderBy string
+}
+type GofileCreateCommentReq struct {
+	Comment string `json:"comment" validate:"required"` // コメントの内容
 }
 
 func GofileCreateResFromEntity(e entity.GofileVideo) GofileCreateRes {
@@ -128,11 +134,14 @@ func GofileVideoResFromEntity(e entity.GofileVideo) GofileVideoRes {
 	gofileComments := make([]GofileVideoCommentRes, 0, len(e.GofileVideoComments))
 	for _, c := range e.GofileVideoComments {
 		gofileComments = append(gofileComments, GofileVideoCommentRes{
-			ID:        c.ID,
-			Comment:   c.Comment,
-			LikeCount: c.LikeCount,
-			CreatedAt: c.CreatedAt.Format("2006-01-02 15:04:05"),
-			UpdatedAt: c.UpdatedAt.Format("2006-01-02 15:04:05"),
+			ID:            c.ID,
+			GofileVideoID: c.GofileVideoID,
+			UserID:        c.UserID,
+			User:          UserResFromEntity(c.User),
+			Comment:       c.Comment,
+			LikeCount:     c.LikeCount,
+			CreatedAt:     c.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt:     c.UpdatedAt.Format("2006-01-02 15:04:05"),
 		})
 	}
 
@@ -154,6 +163,19 @@ func GofileVideoResFromEntity(e entity.GofileVideo) GofileVideoRes {
 		User:                UserResFromEntity(e.User),
 		CreatedAt:           e.CreatedAt.Format("2006-01-02 15:04:05"),
 		UpdatedAt:           e.UpdatedAt.Format("2006-01-02 15:04:05"),
+	}
+}
+
+func GofileVideoCommentResFromEntity(e entity.GofileVideoComment) GofileVideoCommentRes {
+	return GofileVideoCommentRes{
+		ID:            e.ID,
+		GofileVideoID: e.GofileVideoID,
+		UserID:        e.UserID,
+		User:          UserResFromEntity(e.User),
+		Comment:       e.Comment,
+		LikeCount:     e.LikeCount,
+		CreatedAt:     e.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt:     e.UpdatedAt.Format("2006-01-02 15:04:05"),
 	}
 }
 

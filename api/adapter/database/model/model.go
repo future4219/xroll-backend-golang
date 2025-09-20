@@ -80,6 +80,8 @@ type GofileVideoLike struct {
 type GofileVideoComment struct {
 	ID            string    `gorm:"primaryKey;type:varchar(255)"`
 	GofileVideoID string    `gorm:"type:varchar(255);not null"` // 外部キー制約つけたければ↓追加
+	UserID        string    `gorm:"type:varchar(255);not null"`
+	User          User      `gorm:"foreignKey:UserID;references:ID"`
 	Comment       string    `gorm:"type:text;not null"`
 	LikeCount     int       `gorm:"default:0"`
 	CreatedAt     time.Time `gorm:"autoCreateTime"`

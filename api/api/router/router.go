@@ -101,6 +101,7 @@ func NewServer(
 	gofile.POST("/like/:id", gofileHandler.LikeVideo)
 	gofile.POST("/unlike/:id", gofileHandler.UnlikeVideo)
 	gofile.GET("/liked-videos", gofileHandler.FindLikedVideos)
+	gofile.POST("/comment/:video-id", gofileHandler.CreateComment)
 
 	// authCookieOrHeader
 	// Cookie or Header どちらでも認証可能

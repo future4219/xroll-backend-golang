@@ -55,3 +55,7 @@ func (a AuthorizationGofileUseCaseDecorator) FindLikedVideos(user entity.User) (
 func (a AuthorizationGofileUseCaseDecorator) Search(user entity.User, query input_port.GofileSearchQuery) ([]entity.GofileVideo, error) {
 	return a.inner.Search(user, query)
 }
+
+func (a AuthorizationGofileUseCaseDecorator) CreateComment(user entity.User, input input_port.GofileVideoCommentCreate) (entity.GofileVideoComment, error) {
+	return a.inner.CreateComment(user, input)
+}

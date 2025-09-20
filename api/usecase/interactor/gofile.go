@@ -176,6 +176,8 @@ func (u *GofileUseCase) FindByID(user entity.User, id string) (entity.GofileVide
 		return entity.GofileVideo{}, false, err
 	}
 
+	fmt.Printf("%+v\n", video)
+
 	return video, hasLike, nil
 }
 
@@ -362,4 +364,46 @@ func (u *GofileUseCase) Search(user entity.User, query input_port.GofileSearchQu
 		return nil, err
 	}
 	return videos, nil
+}
+
+func (u *GofileUseCase) CreateComment(user entity.User, input input_port.GofileVideoCommentCreate) (entity.GofileVideoComment, error) {
+	if user.ID == "" {
+		return entity.GofileVideoComment{}, fmt.Errorf("userID is required")
+	}
+	if input.VideoID == "" {
+		return entity.GofileVideoComment{}, fmt.Errorf("videoID is required")
+	}
+	if input.Comment == "" {
+		return entity.GofileVideoComment{}, fmt.Errorf("comment is required")
+	}
+
+	// 動画取得 & 閲覧可否（非公開は所有者のみ）
+	video, err := u.gofileRepo.FindByID(input.VideoID)
+	if err != nil {
+		return entity.GofileVideoComment{}, err
+	}
+	if video.UserID != user.ID && !video.IsShared {
+		return entity.GofileVideoComment{}, fmt.Errorf("%w: video not found", ErrKind.NotFound)
+	}
+
+	e := entity.GofileVideoComment{
+		ID:            u.ulid.GenerateID(),
+		GofileVideoID: input.VideoID,
+		UserID:        user.ID,
+		Comment:       input.Comment,
+		LikeCount:     0,
+		CreatedAt:     u.clock.Now(),
+		UpdatedAt:     u.clock.Now(),
+	}
+
+	if err := u.gofileRepo.CreateComment(e); err != nil {
+		return entity.GofileVideoComment{}, err
+	}
+
+	res, err := u.gofileRepo.FindCommentByID(e.ID)
+	if err != nil {
+		return entity.GofileVideoComment{}, err
+	}
+
+	return res, nil
 }

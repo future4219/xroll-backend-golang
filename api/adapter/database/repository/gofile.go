@@ -105,6 +105,7 @@ func (r *GofileRepository) FindByID(id string) (entity.GofileVideo, error) {
 	if err := r.db.
 		Preload("GofileTags").
 		Preload("GofileVideoComments").
+		Preload("GofileVideoComments.User").
 		Preload("User").
 		Where("is_deleted = ?", false).
 		First(&m, "id = ?", id).Error; err != nil {
@@ -114,46 +115,14 @@ func (r *GofileRepository) FindByID(id string) (entity.GofileVideo, error) {
 		return entity.GofileVideo{}, err
 	}
 
-	tags := make([]entity.GofileTag, 0, len(m.GofileTags))
-	for _, tg := range m.GofileTags {
-		tags = append(tags, entity.GofileTag{ID: tg.ID, Name: tg.Name})
-	}
-
-	gofileVideoComments := make([]entity.GofileVideoComment, 0, len(m.GofileVideoComments))
-	for _, comment := range m.GofileVideoComments {
-		gofileVideoComments = append(gofileVideoComments, entity.GofileVideoComment{
-			ID:        comment.ID,
-			Comment:   comment.Comment,
-			LikeCount: comment.LikeCount,
-			CreatedAt: comment.CreatedAt,
-			UpdatedAt: comment.UpdatedAt,
-		})
-	}
-
 	likeCount := int64(0)
 	if err := r.db.Model(&model.GofileVideoLike{}).Where("gofile_video_id = ?", m.ID).Count(&likeCount).Error; err != nil {
 		return entity.GofileVideo{}, err
 	}
 	m.LikeCount = int(likeCount)
 
-	return entity.GofileVideo{
-		ID:                  m.ID,
-		Name:                m.Name,
-		GofileID:            m.GofileID,
-		GofileDirectURL:     m.GofileDirectURL,
-		VideoURL:            m.VideoURL,
-		ThumbnailURL:        m.ThumbnailURL,
-		Description:         m.Description,
-		PlayCount:           m.PlayCount,
-		LikeCount:           m.LikeCount,
-		IsShared:            m.IsShared,
-		GofileTags:          tags,
-		GofileVideoComments: gofileVideoComments,
-		UserID:              m.UserID,
-		User:                m.User.Entity(),
-		CreatedAt:           m.CreatedAt,
-		UpdatedAt:           m.UpdatedAt,
-	}, nil
+	fmt.Printf("gofile video: %+v\n", m)
+	return m.Entity(), nil
 }
 
 func (r *GofileRepository) FindByUserID(userID string) ([]entity.GofileVideo, error) {
@@ -167,46 +136,7 @@ func (r *GofileRepository) FindByUserID(userID string) ([]entity.GofileVideo, er
 		return nil, err
 	}
 
-	videos := make([]entity.GofileVideo, len(res))
-	for i, video := range res {
-
-		tags := make([]entity.GofileTag, 0, len(video.GofileTags))
-		for _, tg := range video.GofileTags {
-			tags = append(tags, entity.GofileTag{ID: tg.ID, Name: tg.Name})
-		}
-
-		gofileVideoComments := make([]entity.GofileVideoComment, 0, len(video.GofileVideoComments))
-		for _, comment := range video.GofileVideoComments {
-			gofileVideoComments = append(gofileVideoComments, entity.GofileVideoComment{
-				ID:        comment.ID,
-				Comment:   comment.Comment,
-				LikeCount: comment.LikeCount,
-				CreatedAt: comment.CreatedAt,
-				UpdatedAt: comment.UpdatedAt,
-			})
-		}
-
-		videos[i] = entity.GofileVideo{
-			ID:                  video.ID,
-			Name:                video.Name,
-			GofileID:            video.GofileID,
-			GofileDirectURL:     video.GofileDirectURL,
-			VideoURL:            video.VideoURL,
-			ThumbnailURL:        video.ThumbnailURL,
-			Description:         video.Description,
-			PlayCount:           video.PlayCount,
-			LikeCount:           video.LikeCount,
-			IsShared:            video.IsShared,
-			UserID:              video.UserID,
-			User:                video.User.Entity(),
-			GofileTags:          tags,
-			GofileVideoComments: gofileVideoComments,
-			CreatedAt:           video.CreatedAt,
-			UpdatedAt:           video.UpdatedAt,
-		}
-	}
-
-	return videos, nil
+	return model.ToEntities(res), nil
 }
 
 func (r *GofileRepository) FindByUserIDShared(userId string) ([]entity.GofileVideo, error) {
@@ -221,46 +151,7 @@ func (r *GofileRepository) FindByUserIDShared(userId string) ([]entity.GofileVid
 		return nil, err
 	}
 
-	videos := make([]entity.GofileVideo, len(res))
-	for i, video := range res {
-
-		tags := make([]entity.GofileTag, 0, len(video.GofileTags))
-		for _, tg := range video.GofileTags {
-			tags = append(tags, entity.GofileTag{ID: tg.ID, Name: tg.Name})
-		}
-
-		gofileVideoComments := make([]entity.GofileVideoComment, 0, len(video.GofileVideoComments))
-		for _, comment := range video.GofileVideoComments {
-			gofileVideoComments = append(gofileVideoComments, entity.GofileVideoComment{
-				ID:        comment.ID,
-				Comment:   comment.Comment,
-				LikeCount: comment.LikeCount,
-				CreatedAt: comment.CreatedAt,
-				UpdatedAt: comment.UpdatedAt,
-			})
-		}
-
-		videos[i] = entity.GofileVideo{
-			ID:                  video.ID,
-			Name:                video.Name,
-			GofileID:            video.GofileID,
-			GofileDirectURL:     video.GofileDirectURL,
-			VideoURL:            video.VideoURL,
-			ThumbnailURL:        video.ThumbnailURL,
-			Description:         video.Description,
-			PlayCount:           video.PlayCount,
-			LikeCount:           video.LikeCount,
-			IsShared:            video.IsShared,
-			UserID:              video.UserID,
-			User:                video.User.Entity(),
-			GofileTags:          tags,
-			GofileVideoComments: gofileVideoComments,
-			CreatedAt:           video.CreatedAt,
-			UpdatedAt:           video.UpdatedAt,
-		}
-	}
-
-	return videos, nil
+	return model.ToEntities(res), nil
 }
 
 func (r *GofileRepository) Delete(id string) error {
@@ -417,41 +308,33 @@ func (r *GofileRepository) Search(qry output_port.GofileSearchQuery) ([]entity.G
 	}
 
 	// ---- model -> entity ----
-	videos := make([]entity.GofileVideo, len(rows))
-	for i, v := range rows {
-		tags := make([]entity.GofileTag, 0, len(v.GofileTags))
-		for _, tg := range v.GofileTags {
-			tags = append(tags, entity.GofileTag{ID: tg.ID, Name: tg.Name})
+	return model.ToEntities(rows), nil
+}
+
+func (r *GofileRepository) CreateComment(gvc entity.GofileVideoComment) error {
+	m := model.GofileVideoComment{
+		ID:            gvc.ID,
+		GofileVideoID: gvc.GofileVideoID,
+		UserID:        gvc.UserID,
+		Comment:       gvc.Comment,
+		LikeCount:     gvc.LikeCount,
+		CreatedAt:     gvc.CreatedAt,
+		UpdatedAt:     gvc.UpdatedAt,
+	}
+	return r.db.Create(&m).Error
+}
+
+func (r *GofileRepository) FindCommentByID(id string) (entity.GofileVideoComment, error) {
+	var m model.GofileVideoComment
+	if err := r.db.
+		Preload("User").
+		Where("id = ?", id).
+		First(&m).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return entity.GofileVideoComment{}, fmt.Errorf("%w: gofile video comment", interactor.ErrKind.NotFound)
 		}
-		comments := make([]entity.GofileVideoComment, 0, len(v.GofileVideoComments))
-		for _, c := range v.GofileVideoComments {
-			comments = append(comments, entity.GofileVideoComment{
-				ID:        c.ID,
-				Comment:   c.Comment,
-				LikeCount: c.LikeCount,
-				CreatedAt: c.CreatedAt,
-				UpdatedAt: c.UpdatedAt,
-			})
-		}
-		videos[i] = entity.GofileVideo{
-			ID:                  v.ID,
-			Name:                v.Name,
-			GofileID:            v.GofileID,
-			GofileDirectURL:     v.GofileDirectURL,
-			VideoURL:            v.VideoURL,
-			ThumbnailURL:        v.ThumbnailURL,
-			Description:         v.Description,
-			PlayCount:           v.PlayCount,
-			LikeCount:           v.LikeCount,
-			IsShared:            v.IsShared,
-			UserID:              v.UserID,
-			User:                v.User.Entity(),
-			GofileTags:          tags,
-			GofileVideoComments: comments,
-			CreatedAt:           v.CreatedAt,
-			UpdatedAt:           v.UpdatedAt,
-		}
+		return entity.GofileVideoComment{}, err
 	}
 
-	return videos, nil
+	return m.Entity(), nil
 }

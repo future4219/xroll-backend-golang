@@ -20,6 +20,8 @@ type GofileRepository interface {
 	DeleteLike(userID, videoID string) (int64, error)
 	FindLikedVideos(userID string) ([]entity.GofileVideo, error)
 	Search(query GofileSearchQuery) ([]entity.GofileVideo, error)
+	CreateComment(entity.GofileVideoComment) error
+	FindCommentByID(id string) (entity.GofileVideoComment, error)
 }
 
 type GofileSearchQuery struct {
