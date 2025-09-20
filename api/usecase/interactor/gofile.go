@@ -176,8 +176,6 @@ func (u *GofileUseCase) FindByID(user entity.User, id string) (entity.GofileVide
 		return entity.GofileVideo{}, false, err
 	}
 
-	fmt.Printf("%+v\n", video)
-
 	return video, hasLike, nil
 }
 
@@ -224,8 +222,7 @@ func (u *GofileUseCase) UpdateIsShareVideo(user entity.User, videoID string, isS
 	}
 
 	video.IsShared = isShare
-	fmt.Printf("-------------------------------\nupdate video isShare: %v\n-------------------------------\n", isShare)
-	fmt.Printf("video: %+v\n", video)
+
 	if err := u.gofileRepo.Update(video); err != nil {
 		return err
 	}
@@ -261,7 +258,6 @@ func (u *GofileUseCase) FindLikedVideos(user entity.User) ([]entity.GofileVideo,
 		return nil, fmt.Errorf("userID is required")
 	}
 
-	fmt.Println("sakaihayate")
 	videos, err := u.gofileRepo.FindLikedVideos(user.ID)
 	if err != nil {
 		return nil, err

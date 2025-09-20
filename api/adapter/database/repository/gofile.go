@@ -86,7 +86,6 @@ func (r *GofileRepository) Update(gofile entity.GofileVideo) (err error) {
 		CreatedAt:       gofile.CreatedAt,
 		UpdatedAt:       gofile.UpdatedAt,
 	}
-	fmt.Printf("gofile: %+v\n", m)
 	if err := r.db.Save(&m).Error; err != nil {
 		return err
 	}
@@ -121,7 +120,6 @@ func (r *GofileRepository) FindByID(id string) (entity.GofileVideo, error) {
 	}
 	m.LikeCount = int(likeCount)
 
-	fmt.Printf("gofile video: %+v\n", m)
 	return m.Entity(), nil
 }
 
@@ -141,7 +139,6 @@ func (r *GofileRepository) FindByUserID(userID string) ([]entity.GofileVideo, er
 
 func (r *GofileRepository) FindByUserIDShared(userId string) ([]entity.GofileVideo, error) {
 	var res []model.GofileVideo
-	fmt.Println("--------------------------")
 	if err := r.db.
 		Preload("User").
 		Preload("GofileTags").

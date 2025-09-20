@@ -241,7 +241,6 @@ func (g *GofileHandler) Delete(c echo.Context) error {
 		logger.Info("Failed to bind path param id", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	fmt.Printf("id to delete: %s\n", id)
 
 	err = g.GofileUC.Delete(user, id)
 	if err != nil {
@@ -298,7 +297,6 @@ func (g *GofileHandler) UnlikeVideo(c echo.Context) error {
 		logger.Info("Failed to bind path param id", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
-	fmt.Printf("id to delete: %s\n", id)
 
 	err = g.GofileUC.UnlikeVideo(user, id)
 	if err != nil {
