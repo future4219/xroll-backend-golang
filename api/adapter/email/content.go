@@ -98,3 +98,19 @@ e-privadoをご利用いただきありがとうございます。
 	body = fmt.Sprintf(body, presignedUrl)
 	return
 }
+
+func ContentToRegister(code string) (subject, body string) {
+	subject = "【Gofile Controller】メールアドレス登録"
+	body = `
+メールアドレスの仮登録を受け付けました。以下の認証コードを入力して、本登録を完了してください。
+
+認証コード：%s
+
+認証コードの有効期限は1時間です。お早めに本登録を行ってください。
+このメールに心当たりがない場合は、このメールを無視してください。
+
+
+`
+	body = fmt.Sprintf(body, code)
+	return
+}

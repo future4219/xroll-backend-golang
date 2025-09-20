@@ -35,9 +35,11 @@ func (h *UserHandler) Create(c echo.Context) error {
 
 	res, err := h.UserUC.Create(
 		input_port.UserCreate{
-			StudentID: req.StudentID,
-			IdmUniv:   req.IdmUniv,
-			IdmBus:    req.IdmBus,
+			Name:     req.Name,
+			Age:      req.Age,
+			UserType: req.UserType,
+			Email:    req.Email,
+			Password: req.Password,
 		})
 	if err != nil {
 		logger.Info("Failed to create user", zap.Error(err))
@@ -120,11 +122,9 @@ func (h *UserHandler) Update(c echo.Context) error {
 	res, err := h.UserUC.Update(
 		user,
 		input_port.UserUpdate{
-			ID:    user.ID,
-			StudentID: req.StudentID,
-			IdmUniv:   req.IdmUniv,
-			IdmBus:    req.IdmBus,
-			UserType:  req.UserType,
+			ID:   user.ID,
+			Name: req.Name,
+			Bio:  req.Bio,
 		})
 	if err != nil {
 		logger.Info("Failed to update user", zap.Error(err))

@@ -12,6 +12,7 @@ var (
 	ErrPasswordHashFailed = errors.New("failed to hash password")
 	ErrUnexpected         = errors.New("unexpected error occurred in password comparing")
 	ErrWrongPassword      = errors.New("password authentication failed")
+	ErrAuthenticationCode = errors.New("authenticationCode authentication failed")
 )
 
 func bcryptHash(txt string) (string, error) {
@@ -44,6 +45,22 @@ func CheckBcryptPassword(hashedPassword string, password string) error {
 	}
 	if err == bcrypt.ErrMismatchedHashAndPassword {
 		return ErrWrongPassword
+	}
+	return ErrUnexpected
+}
+
+func CheckBcryptOtp(hashedOtp string, input string) error {
+	hp, err := base64.StdEncoding.DecodeString(hashedOtp)
+	if err != nil {
+		return ErrBase64DecodeFailed
+	}
+
+	err = bcrypt.CompareHashAndPassword(hp, []byte(input))
+	if err == nil {
+		return nil
+	}
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		return ErrAuthenticationCode
 	}
 	return ErrUnexpected
 }

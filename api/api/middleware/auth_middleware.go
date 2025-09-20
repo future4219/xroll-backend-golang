@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -33,6 +34,50 @@ func NewAuthMiddleware(userUC input_port.IUserUseCase) *AuthMiddleware {
 	return &AuthMiddleware{userUC}
 }
 
+const tokenCookieName = "xroll_at"
+
+// header の Bearer か cookie(xroll_at) からトークンを取る
+func extractToken(c echo.Context) (string, error) {
+	authHeader := c.Request().Header.Get("Authorization")
+	if strings.HasPrefix(authHeader, schema.TokenType+" ") {
+		return strings.TrimPrefix(authHeader, schema.TokenType+" "), nil
+	}
+	ck, err := c.Cookie(tokenCookieName)
+	if err == nil && ck != nil && ck.Value != "" {
+		return ck.Value, nil
+	}
+	return "", ErrNoAuthorizationHeader
+}
+
+// ヘッダ or Cookie どっちでもOK（推奨：動画プロキシや画像などに使う）
+func (m *AuthMiddleware) AuthenticateCookieOrHeader(next echo.HandlerFunc) echo.HandlerFunc {
+	logger, _ := log.NewLogger()
+
+	return func(c echo.Context) error {
+		token, err := extractToken(c)
+		if err != nil {
+			logger.Info("Failed to authenticate (no header & no cookie)", zap.Error(err))
+			return echo.NewHTTPError(http.StatusUnauthorized)
+		}
+
+		userID, err := m.userUC.Authenticate(token)
+		if err != nil {
+			logger.Info("Failed to authenticate (invalid token)", zap.Error(err))
+			return echo.NewHTTPError(http.StatusUnauthorized)
+		}
+
+		user, err := m.userUC.FindByID(entity.User{
+			UserType: entconst.SystemAdmin, // 既存に合わせる
+		}, userID)
+		if err != nil {
+			logger.Error("Failed to find me", zap.Error(err))
+			return echo.NewHTTPError(http.StatusUnauthorized)
+		}
+		c = SetToContext(c, user)
+		return next(c)
+	}
+}
+
 // Authenticate
 // tokenを取得して、認証するmiddlewareの例
 func (m *AuthMiddleware) Authenticate(next echo.HandlerFunc) echo.HandlerFunc {
@@ -56,7 +101,7 @@ func (m *AuthMiddleware) Authenticate(next echo.HandlerFunc) echo.HandlerFunc {
 
 		// set user detail to context
 		user, err := m.userUC.FindByID(entity.User{
-			UserType: entconst.SystemAdmin.String(),
+			UserType: entconst.SystemAdmin,
 		}, userID)
 		if err != nil {
 			logger.Error("Failed to find me", zap.Error(err))
@@ -76,11 +121,48 @@ func (m *AuthMiddleware) NotAuthenticateButToSetUserToContext(next echo.HandlerF
 		token := strings.TrimPrefix(authHeader, schema.TokenType+" ")
 		userID, _ := m.userUC.Authenticate(token)
 		user, err := m.userUC.FindByID(entity.User{
-			UserType: entconst.SystemAdmin.String(),
+			UserType: entconst.SystemAdmin,
 		}, userID)
 		if err == nil {
 			c = SetToContext(c, user)
 		}
+		return next(c)
+	}
+}
+
+// tokenアリとナシの両方を許容して、認証できたらcontextにユーザ情報をセットするmiddleware
+func (m *AuthMiddleware) AuthenticateIfPossible(next echo.HandlerFunc) echo.HandlerFunc {
+	logger, _ := log.NewLogger()
+
+	return func(c echo.Context) error {
+		// Get JWT Token From Header
+		authHeader := c.Request().Header.Get("Authorization")
+		if authHeader == "" || !strings.HasPrefix(authHeader, schema.TokenType+" ") {
+			// tokenが無い場合はそのまま次へ
+			return next(c)
+		}
+		token := strings.TrimPrefix(authHeader, schema.TokenType+" ")
+
+		// Authenticate
+		userID, err := m.userUC.Authenticate(token)
+		if err != nil {
+			logger.Info("Failed to authenticate", zap.Error(err))
+			// tokenがあっても認証に失敗した場合は401を返す
+			fmt.Println("err:", err)
+			return echo.NewHTTPError(http.StatusUnauthorized)
+		}
+
+		// set user detail to context
+		user, err := m.userUC.FindByID(entity.User{
+			UserType: entconst.SystemAdmin,
+		}, userID)
+		if err != nil {
+			logger.Error("Failed to find me", zap.Error(err))
+			// 認証に成功してもユーザが見つからなかった場合は401を返す
+			return echo.NewHTTPError(http.StatusUnauthorized)
+		}
+		c = SetToContext(c, user)
+
 		return next(c)
 	}
 }
@@ -106,7 +188,7 @@ func (m *AuthMiddleware) AuthenticateForUpdatePassword(next echo.HandlerFunc) ec
 
 		// set user detail to context
 		user, err := m.userUC.FindByID(entity.User{
-			UserType: entconst.NonMemberUser.String(),
+			UserType: entconst.GuestUser,
 		}, userID) //FindByIDのdecoratorの認証を通すために書いています。
 
 		if err != nil {
@@ -140,7 +222,7 @@ func (m *AuthMiddleware) AuthenticateForUpdateEmail(next echo.HandlerFunc) echo.
 
 		// set user detail to context
 		user, err := m.userUC.FindByID(entity.User{
-			UserType: entconst.NonMemberUser.String(),
+			UserType: entconst.GuestUser,
 		}, userID)
 		if err != nil {
 			logger.Error("Failed to find me", zap.Error(err))

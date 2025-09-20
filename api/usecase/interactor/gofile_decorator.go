@@ -1,0 +1,61 @@
+package interactor
+
+import (
+	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entity"
+	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/usecase/input_port"
+)
+
+type AuthorizationGofileUseCaseDecorator struct {
+	inner input_port.IGofileUseCase
+}
+
+func NewAuthorizationGofileUseCase(inner input_port.IGofileUseCase) input_port.IGofileUseCase {
+	return &AuthorizationGofileUseCaseDecorator{inner: inner}
+}
+
+func (a AuthorizationGofileUseCaseDecorator) Create(user entity.User, gofile input_port.GofileCreate) (entity.GofileVideo, error) {
+	return a.inner.Create(user, gofile)
+}
+func (a AuthorizationGofileUseCaseDecorator) Update(user entity.User, gofile input_port.GofileUpdate) (entity.GofileVideo, error) {
+	return a.inner.Update(user, gofile)
+}
+
+func (a AuthorizationGofileUseCaseDecorator) FindByUserID(user entity.User) ([]entity.GofileVideo, error) {
+	return a.inner.FindByUserID(user)
+}
+
+func (a AuthorizationGofileUseCaseDecorator) FindByID(user entity.User, id string) (entity.GofileVideo, bool, error) {
+	return a.inner.FindByID(user, id)
+}
+
+func (a AuthorizationGofileUseCaseDecorator) FindByUserIDShared(user entity.User, targetUserID string) ([]entity.GofileVideo, error) {
+	return a.inner.FindByUserIDShared(user, targetUserID)
+}
+
+func (a AuthorizationGofileUseCaseDecorator) UpdateIsShareVideo(user entity.User, id string, isShare bool) error {
+	return a.inner.UpdateIsShareVideo(user, id, isShare)
+}
+
+func (a AuthorizationGofileUseCaseDecorator) Delete(user entity.User, id string) error {
+	return a.inner.Delete(user, id)
+}
+
+func (a AuthorizationGofileUseCaseDecorator) LikeVideo(user entity.User, videoID string) error {
+	return a.inner.LikeVideo(user, videoID)
+}
+
+func (a AuthorizationGofileUseCaseDecorator) UnlikeVideo(user entity.User, videoID string) error {
+	return a.inner.UnlikeVideo(user, videoID)
+}
+
+func (a AuthorizationGofileUseCaseDecorator) FindLikedVideos(user entity.User) ([]entity.GofileVideo, error) {
+	return a.inner.FindLikedVideos(user)
+}
+
+func (a AuthorizationGofileUseCaseDecorator) Search(user entity.User, query input_port.GofileSearchQuery) ([]entity.GofileVideo, error) {
+	return a.inner.Search(user, query)
+}
+
+func (a AuthorizationGofileUseCaseDecorator) CreateComment(user entity.User, input input_port.GofileVideoCommentCreate) (entity.GofileVideoComment, error) {
+	return a.inner.CreateComment(user, input)
+}

@@ -1,0 +1,192 @@
+package schema
+
+import (
+	"github.com/labstack/echo/v4"
+	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entity"
+)
+
+type GofileVideoRes struct {
+	ID                  string                  `json:"id"`                    // 動画のID
+	Name                string                  `json:"name"`                  // 動画の名前
+	GofileID            string                  `json:"gofile_id"`             // GofileのID
+	GofileDirectURL     string                  `json:"gofile_direct_url"`     // GofileのダイレクトURL
+	VideoURL            string                  `json:"video_url"`             // 動画のURL
+	ThumbnailURL        string                  `json:"thumbnail_url"`         // サムネイルのURL
+	Description         string                  `json:"description"`           // 動画の説明
+	PlayCount           int                     `json:"play_count"`            // 再生回数
+	LikeCount           int                     `json:"like_count"`            // いいねの数
+	IsShared            bool                    `json:"is_shared"`             // 動画が共有されているかどうか
+	GofileTags          []GofileTagRes          `json:"gofile_tags"`           // タグの情報
+	GofileVideoComments []GofileVideoCommentRes `json:"gofile_video_comments"` // 動画に対するコメント
+	UserID              *string                 `json:"user_id"`               // ユーザーID
+	User                UserRes                 `json:"user"`                  // ユーザー情報
+	CreatedAt           string                  `json:"created_at"`            // 作成日時
+	UpdatedAt           string                  `json:"updated_at"`            // 更新日時
+}
+
+type GofileVideoResWithLike struct {
+	GofileVideoRes
+	HasLike bool `json:"has_like"` // ユーザーがこの動画にいいねしているかどうか
+}
+
+type GofileVideoListRes struct {
+	Videos []GofileVideoRes `json:"videos"` // 動画のリスト
+	Count  int              `json:"count"`  // 動画の総数
+}
+
+type GofileCreateReq struct {
+	Name        string   `json:"name" validate:"required"`      // 動画の名前
+	GofileID    string   `json:"gofile_id" validate:"required"` // GofileのID
+	TagIDs      []string `json:"tag_ids"`                       // タグのIDリスト
+	UserID      *string  `json:"user_id"`                       // ユーザーID
+	GofileToken *string  `json:"gofile_token"`                  // Gofileのトークン
+}
+
+type GofileCreateRes struct {
+	ID              string         `json:"id"`                // 動画のID
+	Name            string         `json:"name"`              // 動画の名前
+	GofileID        string         `json:"gofile_id"`         // GofileのID
+	GofileDirectURL string         `json:"gofile_direct_url"` // GofileのダイレクトURL
+	VideoURL        string         `json:"video_url"`         // 動画のURL
+	ThumbnailURL    string         `json:"thumbnail_url"`     // サムネイルのURL
+	UserID          *string        `json:"user_id"`           // ユーザーID
+	GofileTags      []GofileTagRes `json:"gofile_tags"`       // タグの情報
+}
+type GofileUpdateReq struct {
+	Name        string   `json:"name" validate:"required"`      // 動画の名前
+	Description string   `json:"description"`                   // 動画の説明
+	TagIDs      []string `json:"tag_ids"`                       // タグのIDリスト
+	IsShared    bool     `json:"is_shared" validate:"required"` // 動画の共有状態
+}
+type GofileTagRes struct {
+	ID   string `json:"id"`   // タグのID
+	Name string `json:"name"` // タグの名前
+}
+
+type GofileVideoCommentRes struct {
+	ID            string  `json:"id"`         // コメントのID
+	GofileVideoID string  `json:"video_id"`   // コメントが属する動画のID
+	UserID        string  `json:"user_id"`    // コメントしたユーザーのID
+	User          UserRes `json:"user"`       // コメントしたユーザーの情報
+	Comment       string  `json:"comment"`    // コメントの内容
+	LikeCount     int     `json:"like_count"` // いいねの数
+	CreatedAt     string  `json:"created_at"` // 作成日時
+	UpdatedAt     string  `json:"updated_at"` // 更新日時
+}
+
+type GofileUpdateIsShareReq struct {
+	VideoID  string `json:"video_id" validate:"required"`  // 動画のID
+	IsShared bool   `json:"is_shared" validate:"required"` // 動画の共有状態
+}
+
+type GofileVideoSearchReq struct {
+	Q       string
+	Skip    int
+	Limit   int
+	Order   string
+	OrderBy string
+}
+type GofileCreateCommentReq struct {
+	Comment string `json:"comment" validate:"required"` // コメントの内容
+}
+
+func GofileCreateResFromEntity(e entity.GofileVideo) GofileCreateRes {
+	tags := make([]GofileTagRes, 0, len(e.GofileTags))
+	for _, t := range e.GofileTags {
+		tags = append(tags, GofileTagResFromEntity(t))
+	}
+	return GofileCreateRes{
+		ID:              e.ID,
+		Name:            e.Name,
+		GofileID:        e.GofileID,
+		GofileDirectURL: e.GofileDirectURL,
+		VideoURL:        e.VideoURL,
+		ThumbnailURL:    e.ThumbnailURL,
+		UserID:          &e.UserID,
+		GofileTags:      tags,
+	}
+}
+
+func GofileTagResFromEntity(tag entity.GofileTag) GofileTagRes {
+	return GofileTagRes{
+		ID:   tag.ID,
+		Name: tag.Name,
+	}
+}
+
+func GofileVideoListFromEntity(videos []entity.GofileVideo) GofileVideoListRes {
+	res := make([]GofileVideoRes, 0, len(videos))
+	for _, v := range videos {
+		res = append(res, GofileVideoResFromEntity(v))
+	}
+
+	return GofileVideoListRes{
+		Videos: res,
+		Count:  len(videos),
+	}
+}
+
+func GofileVideoResFromEntity(e entity.GofileVideo) GofileVideoRes {
+	tags := make([]GofileTagRes, 0, len(e.GofileTags))
+	for _, t := range e.GofileTags {
+		tags = append(tags, GofileTagResFromEntity(t))
+	}
+	gofileComments := make([]GofileVideoCommentRes, 0, len(e.GofileVideoComments))
+	for _, c := range e.GofileVideoComments {
+		gofileComments = append(gofileComments, GofileVideoCommentRes{
+			ID:            c.ID,
+			GofileVideoID: c.GofileVideoID,
+			UserID:        c.UserID,
+			User:          UserResFromEntity(c.User),
+			Comment:       c.Comment,
+			LikeCount:     c.LikeCount,
+			CreatedAt:     c.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt:     c.UpdatedAt.Format("2006-01-02 15:04:05"),
+		})
+	}
+
+	return GofileVideoRes{
+		ID:   e.ID,
+		Name: e.Name,
+		// セキュリティ上、GofileIDとGofileDirectURLは返さない
+		// GofileID:            e.GofileID,
+		// GofileDirectURL:     e.GofileDirectURL,
+		// VideoURL:            e.VideoURL,
+		ThumbnailURL:        e.ThumbnailURL,
+		Description:         e.Description,
+		PlayCount:           e.PlayCount,
+		LikeCount:           e.LikeCount,
+		IsShared:            e.IsShared,
+		GofileTags:          tags,
+		GofileVideoComments: gofileComments,
+		UserID:              &e.UserID,
+		User:                UserResFromEntity(e.User),
+		CreatedAt:           e.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt:           e.UpdatedAt.Format("2006-01-02 15:04:05"),
+	}
+}
+
+func GofileVideoCommentResFromEntity(e entity.GofileVideoComment) GofileVideoCommentRes {
+	return GofileVideoCommentRes{
+		ID:            e.ID,
+		GofileVideoID: e.GofileVideoID,
+		UserID:        e.UserID,
+		User:          UserResFromEntity(e.User),
+		Comment:       e.Comment,
+		LikeCount:     e.LikeCount,
+		CreatedAt:     e.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt:     e.UpdatedAt.Format("2006-01-02 15:04:05"),
+	}
+}
+
+func BindGofileVideoSearchReq(c echo.Context) (ret GofileVideoSearchReq, err error) {
+	const Delimiter = ","
+	bind := echo.QueryParamsBinder(c).
+		String("q", &ret.Q).
+		Int("skip", &ret.Skip).
+		Int("limit", &ret.Limit).
+		String("order", &ret.Order).
+		String("order-by", &ret.OrderBy)
+
+	return ret, bind.BindError()
+}

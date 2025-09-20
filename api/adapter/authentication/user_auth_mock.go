@@ -50,6 +50,14 @@ func (a *UserAuthMock) GenerateInitialPassword(length int) (string, error) {
 	return "testPass", nil
 }
 
+func (a *UserAuthMock) VerifyPassword(hashedPassword, input string) error {
+	return nil
+}
+
+func (a *UserAuthMock) VerifyAuthenticationCode(hashedOtp, input string) error {
+	return nil
+}
+
 func NewUserAuthMock() output_port.UserAuth {
 	return &UserAuthMock{}
 }

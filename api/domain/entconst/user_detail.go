@@ -9,10 +9,10 @@ type UserType string
 type DelegateStatus string
 
 const (
-	SystemAdmin   UserType = "SystemAdmin"   // システム管理者
-	DelegateUser  UserType = "DelegateUser"  // 代議員
-	MemberUser    UserType = "MemberUser"    // 会員
-	NonMemberUser UserType = "NonMemberUser" // 非会員
+	GuestUser    UserType = "GuestUser"    // 1. ゲストユーザー
+	MemberUser   UserType = "MemberUser"   // 2. 会員
+	OfficialUser UserType = "OfficialUser" // 3. 公式に認証されたユーザー
+	SystemAdmin  UserType = "SystemAdmin"  // 4. システム管理者
 )
 
 func (u UserType) String() string {
@@ -23,12 +23,11 @@ func (u UserType) StringJa() string {
 	switch u {
 	case SystemAdmin:
 		return "システム管理者"
-	case DelegateUser:
-		return "代議員"
+	case GuestUser:
+		return "ゲストユーザー"
 	case MemberUser:
 		return "会員"
-	case NonMemberUser:
-		return "非会員"
+
 	default:
 		return ""
 	}
@@ -37,16 +36,15 @@ func (u UserType) StringJa() string {
 func UserTypeList() []UserType {
 	return []UserType{
 		SystemAdmin,
-		DelegateUser,
+		GuestUser,
 		MemberUser,
-		NonMemberUser,
 	}
 }
 
 func UserTypeFromString(userType string) (*UserType, error) {
 	ret := UserType(userType)
 	switch ret {
-	case SystemAdmin, MemberUser, NonMemberUser, DelegateUser:
+	case SystemAdmin, MemberUser, GuestUser:
 		return &ret, nil
 	default:
 		return nil, ErrInvalidUserType
@@ -57,12 +55,10 @@ func ConvertUserTypeToExportName(userType UserType) string {
 	switch userType {
 	case SystemAdmin:
 		return "システム管理者"
-	case DelegateUser:
+	case GuestUser:
 		return "代議員"
 	case MemberUser:
 		return "会員"
-	case NonMemberUser:
-		return "非会員"
 	default:
 		return ""
 	}
