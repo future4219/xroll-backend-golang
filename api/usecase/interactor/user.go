@@ -308,17 +308,22 @@ func (u UserUseCase) VerifyEmail(user entity.User, input input_port.VerifyEmail)
 		return entity.User{}, "", errors.Join(ErrKind.BadRequest, ErrAuthenticationCodeInvalid)
 	}
 
-	user.UserType = entconst.MemberUser
-	user.Email = &registerVerification.Email
-	user.HashedPassword = &registerVerification.HashedPassword
-	user.EmailVerified = true
+	newUser := entity.User{
+		ID:             u.ulid.GenerateID(),
+		Name:           "メンバーユーザー",
+		Age:            1,
+		UserType:       entconst.MemberUser,
+		Email:          &input.Email,
+		HashedPassword: &registerVerification.HashedPassword,
+		EmailVerified:  true,
+	}
 
 	if err := u.transaction.StartTransaction(func(tx interface{}) error {
 		if err := u.registerVerificationRepo.DeleteByEmailInTx(tx, registerVerification.Email); err != nil {
 			return err
 		}
 
-		if err := u.userRepo.UpdateWithTx(tx, user); err != nil {
+		if err := u.userRepo.CreateWithTx(tx, newUser); err != nil {
 			return err
 		}
 
