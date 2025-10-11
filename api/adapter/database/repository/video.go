@@ -26,11 +26,19 @@ func (r *VideoRepository) Search(search output_port.VideoSearch) (videos []entit
 	defer output_port.WrapDatabaseError(&err)
 
 	var videosModel []model.Video
-	if err = r.db.Model(&model.Video{}).
+	
+	q := r.db.Model(&model.Video{}).
 		Preload("Comments").
 		Limit(search.Limit).
-		Offset(search.Offset).
-		Where("created_at BETWEEN ? AND ?", search.Start, search.End).
+		Offset(search.Offset)
+
+	if search.Ranking != nil {
+		q = q.Where("ranking = ?", *search.Ranking)
+	} else {
+		q = q.Where("created_at BETWEEN ? AND ?", search.Start, search.End)
+	}
+
+	if err = q.
 		Order(fmt.Sprintf("%s %s", search.OrderBy.ToString(), search.Order.ToString())).
 		Find(&videosModel).Error; err != nil {
 		return nil, err

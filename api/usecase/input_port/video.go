@@ -3,8 +3,9 @@ package input_port
 import "gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entity"
 
 type VideoSearch struct {
-	Limit  int
-	Offset int
+	Limit      int
+	Offset     int
+	IsRealtime bool
 }
 
 type IVideoUseCase interface {
@@ -14,5 +15,5 @@ type IVideoUseCase interface {
 	FindByID(id string) (entity.Video, error)
 	FindByIDs(ids []string) ([]entity.Video, error)
 	Like(videoID string) error
-	Comment(videoID string, comment string) (error)
+	Comment(videoID string, comment string) error
 }

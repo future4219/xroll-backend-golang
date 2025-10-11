@@ -25,6 +25,13 @@ func NewVideoUseCase(ulid output_port.ULID, videoRepo output_port.VideoRepositor
 func (u *VideoUseCase) Search(search input_port.VideoSearch) (videos []entity.Video, err error) {
 	now := u.clock.Now()
 
+	// ranking: 9999のものは、動画保存されたものとしています。なのでrealtime検索のときだけにする（ゴミ設計ごめん）
+	var ranking *int
+	if search.IsRealtime {
+		r := 9999
+		ranking = &r
+	}
+
 	videos, err = u.videoRepo.Search(
 		output_port.VideoSearch{
 			Limit:  search.Limit,
@@ -32,6 +39,7 @@ func (u *VideoUseCase) Search(search input_port.VideoSearch) (videos []entity.Vi
 			// 現在から３日前まで
 			Start:   now.Add(-3 * 24 * time.Hour),
 			End:     now,
+			Ranking: ranking,
 			OrderBy: output_port.VideoSearchOrderByRanking,
 			Order:   output_port.VideoSearchOrderAsc,
 		},

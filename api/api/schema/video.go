@@ -31,8 +31,9 @@ type VideosRes struct {
 }
 
 type VideoSearchQueryReq struct {
-	Limit  int `query:"limit"`
-	Offset int `query:"offset"`
+	Limit      int  `query:"limit"`
+	Offset     int  `query:"offset"`
+	IsRealtime bool `query:"is_realtime"`
 }
 
 type VideoCreateBulkReq struct {

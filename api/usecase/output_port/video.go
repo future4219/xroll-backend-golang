@@ -57,6 +57,7 @@ type VideoSearch struct {
 	Offset  int
 	Start   time.Time
 	End     time.Time
+	Ranking *int
 	OrderBy VideoSearchOrderBy
 	Order   VideoSearchOrder
 }

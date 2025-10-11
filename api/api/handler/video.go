@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -28,15 +29,18 @@ func (h *VideoHandler) Search(c echo.Context) error {
 	if err := echo.QueryParamsBinder(c).
 		Int("limit", &req.Limit).
 		Int("offset", &req.Offset).
+		Bool("is_realtime", &req.IsRealtime).
 		BindError(); err != nil {
 		logger.Error("Failed to bind query", zap.Error(err))
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
+	fmt.Printf("Search query: %+v\n", req)
 	res, err := h.VideoUC.Search(
 		input_port.VideoSearch{
-			Limit:  req.Limit,
-			Offset: req.Offset,
+			Limit:      req.Limit,
+			Offset:     req.Offset,
+			IsRealtime: req.IsRealtime,
 		})
 	if err != nil {
 		logger.Info("Failed to find ", zap.Error(err))
