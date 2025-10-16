@@ -407,6 +407,33 @@ func (g *GofileHandler) CreateComment(c echo.Context) error {
 	return c.JSON(http.StatusCreated, schema.GofileVideoCommentResFromEntity(res))
 }
 
+func (g *GofileHandler) CreateFromTwimgURL(c echo.Context) error {
+	logger, _ := log.NewLogger()
+	ctx := c.Request().Context()
+	user, err := middleware.GetUserFromContext(ctx) // トークンからIDを取得
+	if err != nil {
+		logger.Error("Failed to get id from context", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	var req schema.GofileCreateFromTwimgURLReq
+	if err := c.Bind(&req); err != nil {
+		logger.Error("Failed to bind request", zap.Error(err))
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	res, err := g.GofileUC.CreateFromTwimgURL(user, req.TwimgURL)
+	if err != nil {
+		logger.Error("Failed to create from twimg url", zap.Error(err))
+		switch {
+		case errors.Is(err, interactor.ErrKind.NotFound):
+			return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		default:
+
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+	}
+	return c.JSON(http.StatusCreated, schema.GofileCreateResFromEntity(res))
+}
+
 func (g *GofileHandler) ProxyGofileVideo(c echo.Context) error {
 	logger, _ := log.NewLogger()
 

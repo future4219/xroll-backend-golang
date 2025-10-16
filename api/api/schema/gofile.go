@@ -90,6 +90,10 @@ type GofileCreateCommentReq struct {
 	Comment string `json:"comment" validate:"required"` // コメントの内容
 }
 
+type GofileCreateFromTwimgURLReq struct {
+	TwimgURL string `json:"twimg_url" validate:"required"` // TwimgのURL
+}
+
 func GofileCreateResFromEntity(e entity.GofileVideo) GofileCreateRes {
 	tags := make([]GofileTagRes, 0, len(e.GofileTags))
 	for _, t := range e.GofileTags {

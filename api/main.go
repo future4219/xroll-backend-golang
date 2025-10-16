@@ -103,6 +103,7 @@ func main() {
 		gofileAPIDriver,
 		userRepo,
 		clockDriver,
+		twitter,
 	))
 
 	s := router.NewServer(

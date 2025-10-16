@@ -18,6 +18,7 @@ type IGofileUseCase interface {
 	FindLikedVideos(user entity.User) ([]entity.GofileVideo, error)
 	Search(user entity.User, query GofileSearchQuery) ([]entity.GofileVideo, error)
 	CreateComment(user entity.User, input GofileVideoCommentCreate) (entity.GofileVideoComment, error)
+	CreateFromTwimgURL(user entity.User, srcUrl string) (entity.GofileVideo, error)
 }
 
 type GofileCreate struct {

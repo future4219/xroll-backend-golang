@@ -1,9 +1,13 @@
 package interactor
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"os"
+	"path"
+	"strings"
+	"time"
 
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/constructor"
 	"gitlab.com/digeon-inc/japan-association-for-clinical-engineers/e-privado/api/domain/entity"
@@ -17,15 +21,17 @@ type GofileUseCase struct {
 	userRepo        output_port.UserRepository
 	ulid            output_port.ULID
 	clock           output_port.Clock
+	twitter         output_port.Twitter
 }
 
-func NewGofileUseCase(ulid output_port.ULID, gofileRepo output_port.GofileRepository, gofileAPIDriver output_port.GofileAPIDriver, userRepo output_port.UserRepository, clock output_port.Clock) input_port.IGofileUseCase {
+func NewGofileUseCase(ulid output_port.ULID, gofileRepo output_port.GofileRepository, gofileAPIDriver output_port.GofileAPIDriver, userRepo output_port.UserRepository, clock output_port.Clock, twitter output_port.Twitter) input_port.IGofileUseCase {
 	return &GofileUseCase{
 		gofileRepo:      gofileRepo,
 		gofileAPIDriver: gofileAPIDriver,
 		userRepo:        userRepo,
 		ulid:            ulid,
 		clock:           clock,
+		twitter:         twitter,
 	}
 }
 
@@ -399,6 +405,113 @@ func (u *GofileUseCase) CreateComment(user entity.User, input input_port.GofileV
 	res, err := u.gofileRepo.FindCommentByID(e.ID)
 	if err != nil {
 		return entity.GofileVideoComment{}, err
+	}
+
+	return res, nil
+}
+
+func (u *GofileUseCase) CreateFromTwimgURL(user entity.User, srcURL string) (entity.GofileVideo, error) {
+	if srcURL == "" {
+		return entity.GofileVideo{}, fmt.Errorf("url is required")
+	}
+
+	// 1) video.twimg.com の直リンクのみ対応（tweet URL の解析は別レイヤでやる）
+	uParsed, err := url.Parse(srcURL)
+	if err != nil {
+		return entity.GofileVideo{}, fmt.Errorf("invalid url: %w", err)
+	}
+	if !strings.EqualFold(uParsed.Host, "video.twimg.com") {
+		return entity.GofileVideo{}, fmt.Errorf("unsupported host: %s (expect video.twimg.com)", uParsed.Host)
+	}
+	// ファイル名推定
+	filename := path.Base(uParsed.Path)
+	if filename == "" || filename == "." || filename == "/" {
+		filename = "video.mp4"
+	}
+	if !strings.HasSuffix(strings.ToLower(filename), ".mp4") {
+		filename += ".mp4"
+	}
+
+	// 2) Twitter CDN からストリーム取得
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	filename, dlResp, err := u.twitter.FetchTwimgStream(ctx, srcURL)
+	if err != nil {
+		return entity.GofileVideo{}, err
+	}
+	defer dlResp.Body.Close()
+
+	// 3) Gofile へストリーム転送 (multipart/form-data)
+	//    エンドポイントは東京。必要なら ENV で差し替え
+	upData, err := u.gofileAPIDriver.Upload(ctx, filename, "", dlResp.Body)
+	if err != nil {
+		return entity.GofileVideo{}, fmt.Errorf("gofile upload: %w", err)
+	}
+
+	// ★ contentId 決定（idを優先、fileIdフォールバック）
+	gofileID := upData.ID
+	if gofileID == "" {
+		gofileID = upData.FileID
+	}
+	if gofileID == "" {
+		return entity.GofileVideo{}, fmt.Errorf("gofile upload ok but content id missing")
+	}
+
+	// 4) DirectLink を発行（必要に応じて）
+	fmt.Println("-------------------------------start issuing direct link-------------------------------")
+	issueRes, err := u.gofileAPIDriver.IssueDirectLink(gofileID, os.Getenv("GOFILE_API_KEY"))
+	if err != nil {
+		return entity.GofileVideo{}, fmt.Errorf("issue direct link: %w", err)
+	}
+	fmt.Println("-------------------------------\nend issuing direct link\n-------------------------------")
+	if issueRes.DirectLink == "" {
+		return entity.GofileVideo{}, fmt.Errorf("no directLink returned for fileId=%s", gofileID)
+	}
+
+	// 5) サムネ等メタ取得（既存どおり）
+	fmt.Println("-------------------------------\nstart getting content\n-------------------------------")
+	getRes, err := u.gofileAPIDriver.GetContent(gofileID, os.Getenv("GOFILE_API_KEY"))
+	if err != nil {
+		return entity.GofileVideo{}, fmt.Errorf("get content: %w", err)
+	}
+	fmt.Println("-------------------------------\nend getting content\n-------------------------------")
+
+	// 6) DB登録（Create と揃える）
+	proxiedVideoURL := os.Getenv("XROLL_API_ENDPOINT") + "/gofile/proxy?url=" + url.QueryEscape(issueRes.DirectLink)
+
+	entityGofile := entity.GofileVideo{
+		ID:              u.ulid.GenerateID(),
+		Name:            filename, // デフォはファイル名。必要なら引数で渡してもよい
+		GofileID:        gofileID,
+		GofileDirectURL: issueRes.DirectLink,
+		VideoURL:        proxiedVideoURL,
+		ThumbnailURL:    getRes.Data.Thumbnail,
+		Description:     "",
+		IsShared:        false,
+		UserID:          user.ID,
+		GofileTags:      nil,
+	}
+
+	if err := u.gofileRepo.Create(entityGofile); err != nil {
+		return entity.GofileVideo{}, err
+	}
+
+	// 7) レコード確認して返す
+	res, err := u.gofileRepo.FindByID(entityGofile.ID)
+	if err != nil {
+		return entity.GofileVideo{}, err
+	}
+
+	// 8) （任意）ユーザーの GofileToken を保存したい場合はここで更新
+	// 既存コードの条件は逆転してたので、空ならセットするのが自然
+	if (user.GofileToken == nil || *user.GofileToken == "") && upData.ParentFolder != "" {
+		// ここでは例として ParentFolder を token 的に扱うなら（実際は専用APIの token を保存するのが正）
+		user.GofileToken = &upData.ParentFolder
+		if err := u.userRepo.Update(user); err != nil {
+			// token 保存失敗は致命でないのでログだけでもOK
+			fmt.Printf("warn: failed to save user gofile token: %v\n", err)
+		}
 	}
 
 	return res, nil

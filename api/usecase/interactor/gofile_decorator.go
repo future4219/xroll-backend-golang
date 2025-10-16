@@ -59,3 +59,7 @@ func (a AuthorizationGofileUseCaseDecorator) Search(user entity.User, query inpu
 func (a AuthorizationGofileUseCaseDecorator) CreateComment(user entity.User, input input_port.GofileVideoCommentCreate) (entity.GofileVideoComment, error) {
 	return a.inner.CreateComment(user, input)
 }
+
+func (a AuthorizationGofileUseCaseDecorator) CreateFromTwimgURL(user entity.User, srcUrl string) (entity.GofileVideo, error) {
+	return a.inner.CreateFromTwimgURL(user, srcUrl)
+}

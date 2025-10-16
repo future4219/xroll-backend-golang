@@ -102,7 +102,7 @@ func NewServer(
 	gofile.POST("/unlike/:id", gofileHandler.UnlikeVideo)
 	gofile.GET("/liked-videos", gofileHandler.FindLikedVideos)
 	gofile.POST("/comment/:video-id", gofileHandler.CreateComment)
-
+	gofile.POST("/create-from-twimg-url", gofileHandler.CreateFromTwimgURL)
 	// authCookieOrHeader
 	// Cookie or Header どちらでも認証可能
 	gofileAuthCookieOrHeader := authCookieOrHeader.Group("/gofile")

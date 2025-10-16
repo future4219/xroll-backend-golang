@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"time"
@@ -156,4 +157,78 @@ func (t *GofileAPIDriver) GetDirectLinks(contentID, gofileToken string) (map[str
 	}
 
 	return out.Data.DirectLinks, nil
+}
+
+// 返却用：Gofileのアップロードレスポンス（必要十分のフィールド）
+// Upload: 受け取った io.Reader を multipart/form-data でそのままGofileにストリーム転送
+// - ctx: タイムアウト含むコンテキスト（呼び出し側で管理）
+// - filename: アップロード時のファイル名
+// - folderID: 同一フォルダに積みたい時に指定（空なら未指定）
+// - r: 動画などの実データのストリーム
+func (t *GofileAPIDriver) Upload(ctx context.Context, filename, folderID string, r io.Reader) (output_port.GofileUploadData, error) {
+	var zero output_port.GofileUploadData
+
+	endpoint := os.Getenv("GOFILE_UPLOAD_ENDPOINT")
+	if endpoint == "" {
+		endpoint = "https://upload-ap-tyo.gofile.io/uploadfile"
+	}
+	const ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
+
+	pr, pw := io.Pipe()
+	mw := multipart.NewWriter(pw)
+
+	// multipart 生成は並行で書き込み
+	go func() {
+		defer func() {
+			_ = mw.Close()
+			_ = pw.Close()
+		}()
+
+		if folderID != "" {
+			if err := mw.WriteField("folderId", folderID); err != nil {
+				_ = pw.CloseWithError(fmt.Errorf("write folderId: %w", err))
+				return
+			}
+		}
+		part, err := mw.CreateFormFile("file", filename)
+		if err != nil {
+			_ = pw.CloseWithError(fmt.Errorf("create form file: %w", err))
+			return
+		}
+		if _, err := io.Copy(part, r); err != nil {
+			_ = pw.CloseWithError(fmt.Errorf("copy stream: %w", err))
+			return
+		}
+	}()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, pr)
+	if err != nil {
+		return zero, fmt.Errorf("new request: %w", err)
+	}
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.Header.Set("User-Agent", ua)
+
+	cli := &http.Client{
+		// タイムアウトは ctx 側で管理する想定（必要なら Transport 調整）
+		Timeout: 0,
+	}
+	resp, err := cli.Do(req)
+	if err != nil {
+		return zero, fmt.Errorf("http do: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return zero, fmt.Errorf("upload failed: %s, body=%s", resp.Status, string(body))
+	}
+
+	var up output_port.UploadResult
+	if err := json.Unmarshal(body, &up); err != nil {
+		return zero, fmt.Errorf("unmarshal upload: %w (body=%s)", err, string(body))
+	}
+	if up.Status != "ok" {
+		return zero, fmt.Errorf("gofile status=%s body=%s", up.Status, string(body))
+	}
+	return up.Data, nil
 }
