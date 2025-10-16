@@ -36,6 +36,7 @@ func (u *TwitterUseCase) GetVideoByURL(url string) (string, error) {
 		Ranking:       9999,
 		VideoURL:      videoUrl,
 		ThumbnailURL:  thumbnailUrl,
+		TweetURL:      &url,
 		DownloadCount: 0,
 		LikeCount:     0,
 		Comments:      []entity.Comment{},
