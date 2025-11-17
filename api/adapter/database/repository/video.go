@@ -28,7 +28,7 @@ func (r *VideoRepository) Search(search output_port.VideoSearch) (videos []entit
 	var videosModel []model.Video
 	
 	q := r.db.Model(&model.Video{}).
-		Preload("Comments").
+
 		Limit(search.Limit).
 		Offset(search.Offset)
 
