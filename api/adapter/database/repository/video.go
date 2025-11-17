@@ -28,7 +28,7 @@ func (r *VideoRepository) Search(search output_port.VideoSearch) (videos []entit
 	var videosModel []model.Video
 	
 	q := r.db.Model(&model.Video{}).
-
+		Preload("Comments").
 		Limit(search.Limit).
 		Offset(search.Offset)
 
@@ -100,7 +100,7 @@ func (r *VideoRepository) CreateBulk(videos []entity.Video) (err error) {
 	if err = r.db.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "video_url"}}, // ← これ必須！
 		DoUpdates: clause.AssignmentColumns([]string{
-			"tweet_url","ranking", "created_at",
+			"tweet_url", "ranking", "created_at",
 		}),
 	}).CreateInBatches(m, 100).Error; err != nil {
 		return err
