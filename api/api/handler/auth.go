@@ -26,6 +26,7 @@ func NewAuthHandler(userUC input_port.IUserUseCase) *AuthHandler {
 }
 
 func (h *AuthHandler) Boot(c echo.Context) error {
+	return nil // for compatibility
 	logger, _ := log.NewLogger()
 
 	ctx := c.Request().Context()
